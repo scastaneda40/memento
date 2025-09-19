@@ -1,0 +1,230 @@
+/* Overlay */
+
+:root {
+  --z-wall: 1;
+  --z-card: 10;
+  --z-card-drag: 999;
+  --z-modal: 2147483647; /* crank it up */
+  --z-tooltip: 3000;
+}
+
+/* Modal always on top */
+.mmt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+}
+
+/* Panel */
+.mmt-panel {
+  position: relative;
+  z-index: calc(var(--z-modal) + 1);
+  width: min(680px, 94vw);
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Header */
+.mmt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.mmt-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.mmt-x {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  color: #475569;
+}
+.mmt-x:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Body */
+.mmt-body {
+  padding: 20px 22px;
+}
+.mmt-label {
+  display: block;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 14px 0 6px;
+}
+.mmt-optional {
+  font-weight: 500;
+  color: #94a3b8;
+  margin-left: 6px;
+}
+
+.mmt-input,
+.mmt-textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #0f172a;
+  outline: 0;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.mmt-textarea {
+  resize: vertical;
+}
+.mmt-input:focus,
+.mmt-textarea:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28);
+}
+.mmt-input--error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.mmt-hintError {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.mmt-hintNote {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Photo picker */
+.mmt-photoRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.mmt-photoPicker {
+  width: 100%;
+  border: 2px dashed rgba(100, 116, 139, 0.45);
+  border-radius: 12px;
+  background: #fafafa;
+  color: #0f172a;
+  font-weight: 600;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.mmt-photoPicker:hover {
+  background: #fff;
+}
+.mmt-photoIcon {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.mmt-photoPreview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mmt-photoPreview img {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.mmt-remove {
+  border: 0;
+  background: transparent;
+  color: #ef4444;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Footer */
+.mmt-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 22px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.mmt-btnGhost {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #0f172a;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mmt-btnGhost:hover {
+  background: #f8fafc;
+}
+
+.mmt-btnPrimary {
+  appearance: none;
+  border: 0;
+  color: #fff;
+  background: #6d28d9;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  box-shadow: 0 12px 32px rgba(109, 40, 217, 0.32);
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.mmt-btnPrimary:hover {
+  background: #5b21b6;
+}
+.mmt-btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Type options — scoped to the modal */
+.mmt-typeOptions {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.mmt-typeOptions label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 15px;
+  font-weight: 500;
+  color: #0f172a; /* always black */
+  cursor: pointer;
+}
+
+.mmt-typeOptions input[type="radio"] {
+  accent-color: #6d28d9; /* violet to match your brand */
+}
+
+/* Optional: subtly emphasize the selected one */
+.mmt-typeOptions input[type="radio"]:checked + * {
+  font-weight: 600;
+}

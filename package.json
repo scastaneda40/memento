@@ -1,0 +1,38 @@
+{
+  "name": "memento",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "visionos": "webspatial-builder run --base=$XR_DEV_SERVER",
+    "build:visionos": "npm run build && npm run visionos"
+  },
+  "dependencies": {
+    "@google/model-viewer": "^4.1.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "@webspatial/core-sdk": "^1.0.2",
+    "@webspatial/react-sdk": "^1.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "three": "^0.172.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@webspatial/builder": "^1.0.2",
+    "@webspatial/platform-visionos": "^1.0.2",
+    "@webspatial/vite-plugin": "^0.1.9",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^6.3.6",
+    "vite-plugin-html": "^3.2.2"
+  }
+}

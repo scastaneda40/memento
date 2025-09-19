@@ -1,0 +1,124 @@
+/* Container */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.wall-view {
+  position: relative;
+  min-height: 100vh;
+  color: #0f172a;
+  overflow: hidden;
+}
+
+/* Use your preset backgrounds across the full view */
+.wall-view.serene-sky {
+  background: linear-gradient(180deg, #cfe6ff 0%, #e9f1ff 100%);
+}
+.wall-view.warm-canvas {
+  background: linear-gradient(180deg, #f6efe7 0%, #efe6db 100%);
+}
+.wall-view.dark-tribute {
+  background: radial-gradient(120% 120% at 30% 20%, #1e1e24, #0f0f14);
+  color: #e5e7eb;
+}
+
+/* Header (frosted, sticky) */
+.wall-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px; /* left | center | right */
+  align-items: center;
+  padding: 16px 20px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+.dark-tribute .wall-header {
+  background: rgba(10, 10, 12, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Title */
+.wall-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  text-align: center; /* centers text in middle grid cell */
+}
+
+/* Back button */
+.back-btn {
+  --size: 44px;
+  display: grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  padding: 0; /* don't rely on padding for centering */
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  line-height: 1; /* kill baseline effects */
+  -webkit-font-smoothing: antialiased;
+}
+.back-btn .icon {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  /* tiny optical tweak if needed on visionOS: */
+  /* transform: translateY(0.5px); */
+}
+
+.dark-tribute .back-btn {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Main area placeholder (so you can see depth) */
+.wall-main {
+  padding: 20px;
+}
+
+/* Floating Action Button (transparent circle with white “+”) */
+.fab {
+  --size: 68px; /* pick your size */
+  position: fixed; /* or absolute inside wall */
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+.fab .icon {
+  display: block;
+  font-size: 32px; /* scales independently of the circle */
+  line-height: 1;
+}
+
+.back-btn,
+.fab {
+  will-change: transform;
+}
+
+.fab:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.16);
+}
+.fab:active {
+  transform: translateY(0);
+}

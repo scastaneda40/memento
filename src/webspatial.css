@@ -1,0 +1,21 @@
+/* Map our simple z values to WebSpatial depth. Higher = nearer. */
+[enable-xr][data-z="20"] {
+  --xr-back: 20;
+}
+[enable-xr][data-z="30"] {
+  --xr-back: 30;
+} /* cards */
+[enable-xr][data-z="40"] {
+  --xr-back: 40;
+} /* brand */
+[enable-xr][data-z="60"] {
+  --xr-back: 60;
+} /* primary button */
+[enable-xr][data-z="80"] {
+  --xr-back: 80;
+} /* badges */
+
+[enable-xr] {
+  /* gentle translucent look that reads well in spatial view */
+  --xr-background-material: translucent;
+}
