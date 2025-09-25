@@ -10,10 +10,22 @@ export type Wall = {
   background: WallBackground;
   created_at: string; // ISO string from DB
   updated_at?: string | null;
+  profile_id: string | null; // NEW
 
   // optional / derived fields
   image_url?: string | null; // dashboard card preview (may be null)
   memento_count?: number | null; // shown on dashboard
+};
+
+export type Profile = {
+  id: string;
+  user_id: string | null; // stays nullable for now
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Memento = {

@@ -4,6 +4,8 @@ import type { Wall, Memento } from "../types";
 import CreateMementoModal from "../components/CreateMementoModal";
 import type { MementoDraft } from "../components/CreateMementoModal";
 import MementoCard from "../components/MementoCard";
+import CreateProfileModal from "../components/CreateProfileModal";
+
 import "../wall.css";
 
 export default function WallView({
@@ -166,6 +168,22 @@ export default function WallView({
       .eq("id", m.id);
   };
 
+  // Add this in WallView
+  const handleDeleteMemento = async (mm: Memento) => {
+    // optimistic remove
+    setMementos((prev) => prev.filter((x) => x.id !== mm.id));
+
+    // delete from Supabase (adjust table/PK as needed)
+    const { error } = await supabase.from("mementos").delete().eq("id", mm.id);
+    if (error) {
+      console.error("Delete failed:", error);
+      // rollback if you want
+      setMementos((prev) =>
+        [...prev, mm].sort((a, b) => (a.created_at! < b.created_at! ? -1 : 1))
+      );
+    }
+  };
+
   return (
     <div className={`wall-view ${wall.background}`}>
       <header className="wall-header">
@@ -188,6 +206,8 @@ export default function WallView({
               )
             }
             onCommit={commitPosition}
+            onDelete={handleDeleteMemento} // ← add this
+            // optionally: confirmDelete={false}
           />
         ))}
 

@@ -7,7 +7,6 @@ const backgrounds: Array<{
   id: Wall["background"];
   name: string;
   desc: string;
-  // uses your existing CSS classes for the thumbnail
   thumbClass: string;
 }> = [
   {
@@ -34,10 +33,12 @@ export default function CreateWallModal({
   open,
   onClose,
   onCreated,
+  profileId = null, // ✅ default handled here
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (w: Wall) => void;
+  profileId?: string | null; // ✅ optional prop type
 }) {
   const [title, setTitle] = useState("");
   const [background, setBackground] =
@@ -64,7 +65,7 @@ export default function CreateWallModal({
     setSaving(true);
     const { data, error } = await supabase
       .from("walls")
-      .insert({ title, background })
+      .insert({ title, background, profile_id: profileId ?? null }) // ✅ only one insert
       .select()
       .single();
     setSaving(false);
@@ -112,6 +113,7 @@ export default function CreateWallModal({
             Wall Title <span style={{ color: "#6d28d9" }}>*</span>
           </label>
           <input
+            ref={inputRef}
             className="mdl-input"
             placeholder="e.g., Mom’s 50th Birthday"
             value={title}

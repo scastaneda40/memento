@@ -9,7 +9,7 @@
 /* Page */
 .dashboard {
   min-height: 100vh;
-  background-color: transparent; /* instead of var(--bg) */
+  background-color: transparent;
   color: var(--ink);
 }
 
@@ -20,7 +20,7 @@
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* pushes brand left, button right */
+  justify-content: space-between;
   padding: 16px 24px;
 
   backdrop-filter: blur(20px) saturate(160%);
@@ -30,39 +30,61 @@
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.08);
 }
 
-.card--click {
-  cursor: pointer;
-}
-.card--click:active {
-  transform: translateY(0);
-}
-
 .brand {
   font-weight: 700;
   font-size: 22px;
   cursor: pointer;
 }
 
-.dash-header .primary-btn {
-  margin-left: auto; /* ensures button hugs the right edge */
+/* Right-side actions */
+.dash-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-/* Button */
+/* Buttons */
 .primary-btn {
   appearance: none;
   border: 0;
   border-radius: 12px;
   background: var(--violet);
   color: #fff;
-  padding: 10px 14px;
+  padding: 10px 16px;
   font-weight: 600;
   box-shadow: 0 10px 24px rgba(109, 40, 217, 0.25);
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.dash-actions .primary-btn {
+  min-width: 160px; /* pick the size you like (200–240 works well) */
+  height: 40px; /* identical height */
+  justify-content: center;
+  gap: 10px; /* nice spacing between icon and text */
+  padding: 0 18px; /* padding is now mostly for horizontal breathing room */
+}
+
+.dash-actions .primary-btn .btn-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .primary-btn:hover {
   background: var(--violet-600);
   transform: translateY(-1px);
+}
+.primary-btn .btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #fff;
 }
 
 /* Main */
@@ -72,23 +94,165 @@
   padding: 24px;
 }
 
+/* --- Title / chooser --- */
 .title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.title {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0;
-}
-.meta {
-  color: var(--muted);
-  font-size: 14px;
+  margin-bottom: 1.5rem;
 }
 
-/* Grid */
+.title-group {
+  display: flex;
+  align-items: center; /* keep count on same baseline as title */
+  gap: 10px;
+  position: relative; /* anchor the dropdown menu */
+}
+
+.title-group .title {
+  margin: 0;
+  line-height: 1.1;
+  font-weight: 800;
+  font-size: clamp(22px, 3vw, 38px);
+  color: #0b1324;
+  padding-bottom: 2px;
+}
+
+.title-group .meta-count {
+  line-height: 1;
+  font-size: clamp(14px, 1.6vw, 24px);
+  color: var(--muted);
+  font-weight: 500;
+  transform: none;
+}
+
+.avatar-wrap {
+  display: inline-flex;
+  align-self: center;
+}
+.title-avatar {
+  width: clamp(32px, 5vw, 56px);
+  height: clamp(32px, 5vw, 56px);
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Chevron button — supports .title-chooser or .title-picker-btn */
+.title-chooser,
+.title-picker-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px; /* square-ish corners */
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 6px 18px rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  cursor: pointer;
+  margin-left: 8px;
+
+  /* move the whole button up a touch */
+  align-self: center;
+  margin-top: 0;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.title-chooser:hover,
+.title-picker-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 24px rgba(0, 0, 0, 0.16);
+}
+.title-chooser:active,
+.title-picker-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Chevron rotation */
+.title-chooser .chev,
+.title-picker-btn svg {
+  transition: transform 0.18s ease;
+}
+.title-chooser.is-open .chev,
+.title-picker-btn[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu — supports .profile-menu or .title-menu */
+.profile-menu,
+.title-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0; /* left-align under the title */
+  min-width: 320px;
+  max-width: min(420px, 90vw);
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 50;
+}
+
+.profile-menu .menu-item,
+.title-menu .menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: #0f172a;
+  font-weight: 600;
+}
+.profile-menu .menu-item:hover,
+.title-menu .menu-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.profile-menu .menu-sep,
+.title-menu .menu-sep {
+  height: 1px;
+  margin: 8px 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 1px;
+}
+.profile-menu .menu-empty,
+.title-menu .menu-empty {
+  color: var(--muted);
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
+/* Avatars inside menu */
+.menu-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #eef2ff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+.menu-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.menu-avatar-fallback {
+  font-size: 16px;
+}
+
+/* Cards grid */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -107,25 +271,26 @@
 
 /* Card */
 .card {
-  /* frosted glass */
   background: rgba(255, 255, 255, 0.14);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.28);
-
-  /* existing bits */
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   will-change: transform;
-
-  /* WebSpatial hint for “glass” */
   --xr-background-material: translucent;
 }
 .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+.card--click {
+  cursor: pointer;
+}
+.card--click:active {
+  transform: translateY(0);
 }
 
 .thumb {
@@ -133,17 +298,15 @@
   overflow: hidden;
   height: 160px;
 }
-
 .thumb > .serene-sky,
 .thumb > .warm-canvas,
 .thumb > .dark-tribute {
   width: 100%;
   height: 100%;
-  position: absolute; /* sits behind badge */
+  position: absolute;
   top: 0;
   left: 0;
 }
-
 .thumb-img {
   display: block;
   width: 100%;
@@ -163,11 +326,10 @@
 }
 
 .badge {
-  position: absolute; /* NEW */
-  top: 10px; /* NEW */
-  right: 10px; /* NEW */
-  z-index: 2; /* NEW: over the img */
-
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
   background: rgba(255, 255, 255, 0.22);
   -webkit-backdrop-filter: blur(10px) saturate(130%);
   backdrop-filter: blur(10px) saturate(130%);
@@ -177,7 +339,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  pointer-events: none; /* optional: won’t block card clicks */
+  pointer-events: none;
 }
 
 .card.outline {
@@ -198,4 +360,73 @@
 .card-sub {
   color: var(--muted);
   font-size: 14px;
+}
+
+/* --- Dropdown button reset (fixes grey borders) --- */
+.title-menu button,
+.profile-menu button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+
+/* --- Support BOTH naming schemes (.menu-* and .title-menu-*) --- */
+.profile-menu .menu-item,
+.title-menu .menu-item,
+.profile-menu .title-menu-item,
+.title-menu .title-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.profile-menu .menu-item:hover,
+.title-menu .menu-item:hover,
+.profile-menu .title-menu-item:hover,
+.title-menu .title-menu-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.profile-menu .menu-sep,
+.title-menu .menu-sep,
+.profile-menu .title-menu-sep,
+.title-menu .title-menu-sep {
+  height: 1px;
+  margin: 8px 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 1px;
+}
+
+.profile-menu .menu-empty,
+.title-menu .menu-empty,
+.profile-menu .title-menu-empty,
+.title-menu .title-menu-empty {
+  color: var(--muted);
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
+/* Active row highlight (when current profile is selected) */
+.title-menu .is-active,
+.profile-menu .is-active {
+  background: rgba(109, 40, 217, 0.12);
+}
+
+/* Keep the square chevron rotation working with aria-expanded */
+.title-picker-btn svg {
+  transition: transform 0.18s ease;
+}
+.title-picker-btn[aria-expanded="true"] svg {
+  transform: rotate(180deg);
 }
