@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@google/model-viewer": "^4.1.0",
-    "@supabase/supabase-js": "^2.57.4",
+    "@supabase/supabase-js": "^2.58.0",
     "@webspatial/core-sdk": "^1.0.2",
     "@webspatial/react-sdk": "^1.0.2",
     "react": "^19.1.1",

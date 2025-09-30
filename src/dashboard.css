@@ -180,6 +180,35 @@
   transform: rotate(180deg);
 }
 
+/* Reset the button so its content centers identically on WebSpatial/visionOS */
+.title-picker-btn {
+  display: flex; /* more predictable than grid for inline SVG */
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* no padding shifting the icon */
+  line-height: 1; /* kill baseline alignment */
+  vertical-align: middle;
+  -webkit-appearance: none; /* iOS/visionOS quirks */
+  appearance: none;
+}
+
+/* Make the SVG ignore baselines and center perfectly */
+.title-picker-btn > svg {
+  display: block; /* opt out of baseline */
+  width: 18px;
+  height: 18px;
+  margin: 0; /* no stray spacing */
+  pointer-events: none; /* clicks hit the button, not the path */
+  transform: translateY(0); /* neutral; keeps your rotate(180deg) working */
+}
+
+/* If the simulator still renders 1px low, give it a tiny platform-safe nudge */
+@supports (-webkit-touch-callout: none) {
+  .title-picker-btn > svg {
+    transform: translateY(0.5px);
+  }
+}
+
 /* Dropdown menu — supports .profile-menu or .title-menu */
 .profile-menu,
 .title-menu {

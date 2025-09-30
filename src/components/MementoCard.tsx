@@ -63,7 +63,7 @@ export default function MementoCard({
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     // Resize takes priority over drag
     if (resizing) {
-      const { corner, mx, my, x, y, w } = resizing;
+      const { corner, mx, my, x, w } = resizing;
       const dx = e.clientX - mx;
       const dy = e.clientY - my;
 
@@ -359,16 +359,16 @@ export default function MementoCard({
 }
 
 /** Small diagonal arrows icon (↗︎↙︎) */
-function ResizeGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden>
-      <path
-        d="M7 17l10-10M11 7h6v6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+// function ResizeGlyph() {
+//   return (
+//     <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden>
+//       <path
+//         d="M7 17l10-10M11 7h6v6"
+//         fill="none"
+//         stroke="currentColor"
+//         strokeWidth="2"
+//         strokeLinecap="round"
+//       />
+//     </svg>
+//   );
+// }

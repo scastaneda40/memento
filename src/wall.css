@@ -69,7 +69,7 @@
 }
 .back-btn .icon {
   display: block;
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1;
   /* tiny optical tweak if needed on visionOS: */
   /* transform: translateY(0.5px); */
@@ -106,7 +106,7 @@
 }
 .fab .icon {
   display: block;
-  font-size: 32px; /* scales independently of the circle */
+  font-size: 36px; /* scales independently of the circle */
   line-height: 1;
 }
 

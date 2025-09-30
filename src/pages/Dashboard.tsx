@@ -10,19 +10,27 @@ import "../dashboard.css";
 export default function Dashboard({
   goHome,
   onOpenWall,
+  selectedProfileId, // controlled selection from App
+  onSelectProfile, // setter from App
 }: {
   goHome: () => void;
   onOpenWall: (w: Wall) => void;
+  selectedProfileId: string | null;
+  onSelectProfile: (id: string | null) => void;
 }) {
   const [openWall, setOpenWall] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
 
+  // Auth user id
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  // Local Profile object for avatar/name; ID is the source of truth
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   const [walls, setWalls] = useState<Wall[]>([]);
   const [coverMap, setCoverMap] = useState<Record<string, string>>({});
   const [countMap, setCountMap] = useState<Record<string, number>>({});
-
   const [profiles, setProfiles] = useState<Profile[]>([]);
 
   // dropdown state/refs
@@ -30,45 +38,94 @@ export default function Dashboard({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // ---- Load profiles once
+  // ---- Auth guard + session tracking
   useEffect(() => {
+    let ignore = false;
+
+    const init = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!ignore) {
+        const uid = data.user?.id ?? null;
+        setUserId(uid);
+        setAuthReady(true);
+        if (!uid) {
+          // no session → go to auth
+          window.location.hash = "/auth";
+        }
+      }
+    };
+
+    // subscribe to auth changes (optional but nice)
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id ?? null;
+      setUserId(uid);
+      if (!uid) window.location.hash = "/auth";
+    });
+
+    void init();
+    return () => {
+      ignore = true;
+      sub?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  // ---- Load profiles for this user
+  useEffect(() => {
+    if (!authReady || !userId) return;
     (async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("user_id", userId) // filter by owner
         .order("display_name", { ascending: true });
       if (!error && data) setProfiles(data as Profile[]);
+      else setProfiles([]);
     })();
-  }, []);
+  }, [authReady, userId]);
 
-  // ---- Walls loader (filtered by profile or unassigned)
-  const loadWalls = useCallback(async (profileId?: string | null) => {
-    const query = supabase
-      .from("walls")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (profileId) query.eq("profile_id", profileId);
-    else query.is("profile_id", null); // "My Walls (Unassigned)"
-
-    const { data: wallRows, error } = await query;
-    if (error || !wallRows) {
-      console.warn("load walls error:", error);
-      setWalls([]);
-      return;
+  // ---- Keep local Profile object in sync with the controlled ID
+  useEffect(() => {
+    if (!profiles.length || !selectedProfileId) {
+      setSelectedProfile(null);
+      if (!selectedProfileId) return;
     }
-    setWalls(wallRows as Wall[]);
-  }, []);
+    const found = profiles.find((p) => p.id === selectedProfileId) ?? null;
+    setSelectedProfile(found);
+  }, [profiles, selectedProfileId]);
 
-  // Initial: show unassigned
-  useEffect(() => {
-    loadWalls(null);
-  }, [loadWalls]);
+  // ---- Walls loader (filter by profile id OR unassigned) — owned by user
+  const loadWalls = useCallback(
+    async (profileId: string | null) => {
+      if (!userId) {
+        setWalls([]);
+        return;
+      }
+      let query = supabase
+        .from("walls")
+        .select("*")
+        .eq("user_id", userId) // filter by owner
+        .order("created_at", { ascending: false });
 
-  // Re-load when selection changes
+      query = profileId
+        ? query.eq("profile_id", profileId)
+        : query.is("profile_id", null);
+
+      const { data: wallRows, error } = await query;
+      if (error || !wallRows) {
+        console.warn("load walls error:", error);
+        setWalls([]);
+        return;
+      }
+      setWalls(wallRows as Wall[]);
+    },
+    [userId]
+  );
+
+  // ✅ Drive wall loading directly off the controlled ID (and userId)
   useEffect(() => {
-    loadWalls(selectedProfile?.id ?? null);
-  }, [selectedProfile, loadWalls]);
+    if (!authReady || userId === null) return;
+    loadWalls(selectedProfileId ?? null);
+  }, [authReady, userId, selectedProfileId, loadWalls]);
 
   // Build covers + counts per wall
   useEffect(() => {
@@ -117,7 +174,6 @@ export default function Dashboard({
       if (buttonRef.current?.contains(target)) return;
       setMenuOpen(false);
     };
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
@@ -130,19 +186,34 @@ export default function Dashboard({
     };
   }, [menuOpen]);
 
-  // Selections
+  // Selections (notify parent right away)
   const selectUnassigned = () => {
-    setSelectedProfile(null);
+    onSelectProfile(null);
     setMenuOpen(false);
   };
   const selectProfile = (p: Profile) => {
-    setSelectedProfile(p);
+    onSelectProfile(p.id);
     setMenuOpen(false);
+    // Optional: optimistic local object for immediate avatar/name update
+    setSelectedProfile(p);
   };
 
-  const titleText = selectedProfile
-    ? `${selectedProfile.display_name}'s Walls`
+  // Title derived from selectedProfile (fallback if not resolved yet)
+  const titleText = selectedProfileId
+    ? `${selectedProfile?.display_name ?? "Profile"}'s Walls`
     : "My Walls";
+
+  // Simple guard/loading state
+  if (!authReady) {
+    return (
+      <div className="dashboard">
+        <header className="dash-header">
+          <div className="brand">Memento°</div>
+        </header>
+        <main className="dash-main">Loading…</main>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -152,6 +223,27 @@ export default function Dashboard({
         </div>
 
         <div className="dash-actions">
+          {/* Sign out */}
+          <button
+            className="primary-btn"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.hash = "/auth";
+            }}
+            enable-xr="true"
+            data-z="40"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="btn-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3h-8a2 2 0 0 0-2 2v4h2V5h8v14h-8v-4h-2v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+            </svg>
+            Sign out
+          </button>
+
           {/* New Profile */}
           <button
             className="primary-btn"
@@ -222,9 +314,14 @@ export default function Dashboard({
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label="Choose profile"
-                onClick={() => setMenuOpen((v) => !v)} // toggles open/close
+                onClick={() => setMenuOpen((v) => !v)}
               >
-                <svg viewBox="0 0 24 24" width="18" height="18">
+                <svg
+                  viewBox="0 0 24 24"
+                  preserveAspectRatio="xMidYMid meet"
+                  width="18"
+                  height="18"
+                >
                   <path
                     d="M6 9l6 6 6-6"
                     fill="none"
@@ -256,7 +353,7 @@ export default function Dashboard({
                         key={p.id}
                         className={
                           "title-menu-item" +
-                          (selectedProfile?.id === p.id ? " is-active" : "")
+                          (selectedProfileId === p.id ? " is-active" : "")
                         }
                         role="menuitem"
                         onClick={() => selectProfile(p)}
@@ -331,7 +428,7 @@ export default function Dashboard({
         open={openWall}
         onClose={() => setOpenWall(false)}
         onCreated={(w) => setWalls((ws) => [w, ...ws])}
-        profileId={selectedProfile?.id ?? null}
+        profileId={selectedProfileId /* use controlled id */}
       />
 
       {/* Create Profile (after create, switch to it) */}
@@ -339,9 +436,8 @@ export default function Dashboard({
         open={openProfile}
         onClose={() => setOpenProfile(false)}
         onCreated={(p) => {
-          setSelectedProfile(p);
+          onSelectProfile(p.id); // keep parent in sync
           setOpenProfile(false);
-          // ensure it appears in the list immediately
           setProfiles((prev) =>
             prev.find((x) => x.id === p.id) ? prev : [p, ...prev]
           );
