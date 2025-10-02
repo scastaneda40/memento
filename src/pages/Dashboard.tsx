@@ -222,8 +222,53 @@ export default function Dashboard({
           Memento°
         </div>
 
-        <div className="dash-actions">
-          {/* Sign out */}
+        <div className="center-actions">
+          <button
+            className="primary-btn"
+            onClick={() => setOpenProfile(true)}
+            enable-xr="true"
+            data-z="40"
+          >
+            {/* User icon */}
+            <svg
+              className="btn-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+                fill="currentColor"
+              />
+            </svg>
+            New Profile
+          </button>
+
+          <button
+            className="primary-btn"
+            onClick={() => setOpenWall(true)}
+            enable-xr="true"
+            data-z="40"
+          >
+            {/* Plus icon */}
+            <svg
+              className="btn-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            New Wall
+          </button>
+        </div>
+
+        <div className="right-actions">
           <button
             className="primary-btn"
             onClick={async () => {
@@ -233,56 +278,28 @@ export default function Dashboard({
             enable-xr="true"
             data-z="40"
           >
+            {/* Logout icon */}
             <svg
-              xmlns="http://www.w3.org/2000/svg"
               className="btn-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3h-8a2 2 0 0 0-2 2v4h2V5h8v14h-8v-4h-2v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
-            </svg>
-            Sign out
-          </button>
-
-          {/* New Profile */}
-          <button
-            className="primary-btn"
-            onClick={() => setOpenProfile(true)}
-            enable-xr="true"
-            data-z="40"
-          >
-            <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="btn-icon"
               viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-            </svg>
-            New Profile
-          </button>
-
-          {/* New Wall – passes selected profile id */}
-          <button
-            className="primary-btn"
-            onClick={() => setOpenWall(true)}
-            enable-xr="true"
-            data-z="40"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="btn-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
+              fill="none"
             >
               <path
-                d="M12 5v14m-7-7h14"
+                d="M16 17l5-5-5-5M21 12H9"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M13 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
             </svg>
-            New Wall
+            Sign out
           </button>
         </div>
       </header>

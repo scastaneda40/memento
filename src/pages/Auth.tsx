@@ -12,7 +12,7 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const redirectTo = `${window.location.origin}/#/dashboard`;
+  const redirectTo = window.location.origin;
 
   const handleSignIn = async () => {
     setBusy(true);
@@ -57,18 +57,10 @@ export default function Auth() {
   const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     setErr(null);
-
-    const redirectTo = `${window.location.origin}/#/oauth`; // <- dedicated bridge
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo,
-        // flowType: "pkce", // <- removed as it's not a valid property
-        queryParams: { prompt: "select_account" }, // nice UX on Google
-      },
+      options: { redirectTo }, // ← no #/anything here
     });
-
     if (error) {
       setBusy(false);
       setErr(error.message);

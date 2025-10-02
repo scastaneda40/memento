@@ -1,7 +1,7 @@
 // src/App.tsx
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
-// import Landing from "./pages/Landing";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import WallView from "./pages/WallView";
 import AuthView from "./pages/Auth";
@@ -9,27 +9,13 @@ import type { Wall } from "./types";
 
 type Route = "landing" | "dashboard" | "wall" | "auth";
 
-// --- Normalize hash to always be "#/<route>" (adds the "/" if missing)
-const normalizeHash = () => {
-  const h = window.location.hash;
-  // if it's "#dashboard" or "#wall" or "#auth", convert to "#/dashboard" etc.
-  if (/^#(dashboard|wall|auth)(\b|\/|$)/.test(h)) {
-    const fixed = h.replace(/^#/, "#/");
-    if (fixed !== h) window.location.hash = fixed;
-    return fixed;
-  }
-  return h;
-};
-
 const getRoute = (): Route => {
-  const h = normalizeHash(); // <-- use the normalized value
+  const h = window.location.hash;
   if (h.startsWith("#/dashboard")) return "dashboard";
   if (h.startsWith("#/wall")) return "wall";
   if (h.startsWith("#/auth")) return "auth";
   return "landing";
 };
-
-// const isOauthReturn = () => window.location.hash.startsWith("#/oauth");
 
 export default function App() {
   const [route, setRoute] = useState<Route>(getRoute());
@@ -37,7 +23,7 @@ export default function App() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null
   );
-  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null); // null = booting
 
   // Router
   useEffect(() => {
@@ -52,36 +38,34 @@ export default function App() {
     document.documentElement.classList.toggle("is-spatial", isSpatial);
   }, []);
 
-  useEffect(() => {
-    // Handle PKCE return at #/oauth?code=...&state=...
-    const hash = window.location.hash; // e.g. "#/oauth?code=xxx&state=yyy"
-    if (hash.startsWith("#/oauth")) {
-      // pull the query part after "#/oauth"
-      const q = hash.split("?")[1] || "";
-      const params = new URLSearchParams(q);
-      const code = params.get("code");
-      if (code) {
-        // Supabase will read code_verifier from its storage and create the session
-        supabase.auth
-          .exchangeCodeForSession(code)
-          .then(() => {
-            window.location.hash = "/dashboard";
-          })
-          .catch(() => {
-            window.location.hash = "/auth";
-          });
-      } else {
-        // no code? just send to auth
-        window.location.hash = "/auth";
-      }
-    }
-  }, []);
-
-  // Auth bootstrap + listener
+  // 🔑 NEW: Exchange OAuth code for a session (PKCE callback)
   useEffect(() => {
     (async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      const error = url.searchParams.get("error");
+
+      if (error) {
+        // optional: show a toast
+        console.warn("OAuth error:", error);
+      }
+
+      if (code) {
+        const { error: exErr } = await supabase.auth.exchangeCodeForSession(
+          code
+        );
+        if (exErr) {
+          console.error("exchangeCodeForSession failed:", exErr.message);
+        }
+        // strip query params from the URL (keeps hash router intact)
+        url.search = "";
+        window.history.replaceState({}, "", url.toString());
+      }
+
+      // after possible exchange, read current session
       const { data } = await supabase.auth.getSession();
       setIsAuthed(!!data.session);
+
       if (data.session && getRoute() === "landing") {
         window.location.hash = "/dashboard";
       }
@@ -108,16 +92,24 @@ export default function App() {
     window.location.hash = "/wall";
   };
 
-  // While booting auth, render nothing (or a tiny splash)
   if (isAuthed === null) return null;
 
-  // If NOT signed in, force /auth for any route except /auth
+  // If NOT signed in, only allow Landing and Auth
   if (!isAuthed) {
-    if (route !== "auth") {
+    // if someone navigates to /dashboard or /wall while unauthenticated → push to /auth
+    if (route === "dashboard" || route === "wall") {
       window.location.hash = "/auth";
-      return null; // wait one tick for the hashchange/router to render AuthView
+      return null; // stop rendering this frame
     }
-    return <AuthView />; // already on /auth
+    if (route === "auth") return <AuthView />;
+
+    // Landing: both actions go to /auth
+    return (
+      <Landing
+        onPrimary={() => (window.location.hash = "/auth")}
+        onViewWalls={() => (window.location.hash = "/auth")}
+      />
+    );
   }
 
   if (route === "dashboard") {
