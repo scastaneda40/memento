@@ -5,6 +5,7 @@ import type { Wall, Memento } from "../types";
 import CreateMementoModal from "../components/CreateMementoModal";
 import type { MementoDraft } from "../components/CreateMementoModal";
 import MementoCard from "../components/MementoCard";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import "../wall.css";
 
 export default function WallView({
@@ -12,7 +13,7 @@ export default function WallView({
   onBack,
 }: {
   wall: Wall;
-  onBack: (profileId: string | null) => void; // send profile on Back
+  onBack: () => void; // send profile on Back
 }) {
   const [openMemento, setOpenMemento] = useState(false);
   const [mementos, setMementos] = useState<Memento[]>([]);
@@ -29,14 +30,14 @@ export default function WallView({
         const uid = data.user?.id ?? null;
         setUserId(uid);
         setAuthReady(true);
-        if (!uid) window.location.hash = "/auth";
       }
     };
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      const uid = session?.user?.id ?? null;
-      setUserId(uid);
-      if (!uid) window.location.hash = "/auth";
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        const uid: string | null = session?.user?.id ?? null;
+        setUserId(uid);
+      }
+    );
     void init();
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -202,11 +203,7 @@ export default function WallView({
     return (
       <div className={`wall-view ${wall.background}`}>
         <header className="wall-header">
-          <button
-            className="back-btn"
-            aria-label="Back"
-            onClick={() => onBack(wall.profile_id ?? null)}
-          >
+          <button className="back-btn" aria-label="Back" onClick={onBack}>
             <svg
               className="icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -234,7 +231,7 @@ export default function WallView({
       <header className="wall-header">
         <button
           className="back-btn"
-          onClick={() => onBack(wall.profile_id ?? null)} // keep selection on return
+          onClick={onBack} // keep selection on return
           aria-label="Back"
         >
           <svg

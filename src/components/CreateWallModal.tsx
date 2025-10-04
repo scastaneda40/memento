@@ -1,7 +1,12 @@
+// src/components/CreateWallModal.tsx
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { Wall } from "../types";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import "../modal.css";
+
+// LOUD MODULE-LOAD LOG
+console.log("[CreateWallModal] module loaded");
 
 const backgrounds: Array<{
   id: Wall["background"];
@@ -33,59 +38,219 @@ export default function CreateWallModal({
   open,
   onClose,
   onCreated,
-  profileId = null, // ✅ default handled here
+  profileId = null,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (w: Wall) => void;
-  profileId?: string | null; // ✅ optional prop type
+  profileId?: string | null;
 }) {
+  console.log("[CreateWallModal] render start, props:", { open, profileId }); // every render
+
   const [title, setTitle] = useState("");
   const [background, setBackground] =
     useState<Wall["background"]>("serene-sky");
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // focus title on open, Esc closes
+  // Local auth snapshot for debugging
+  const [authReady, setAuthReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const dumpSession = async (where: string) => {
+    const { data, error } = await supabase.auth.getSession();
+    console.log(`[CreateWallModal] dumpSession @ ${where}`, {
+      error: error?.message ?? null,
+      hasSession: !!data.session,
+      userId: data.session?.user?.id ?? null,
+      expires_at: data.session?.expires_at ?? null,
+    });
+    return data.session;
+  };
+
+  // Track open/close
   useEffect(() => {
+    console.log("[CreateWallModal] useEffect(open) fired:", open);
     if (!open) return;
+    console.log(
+      "[CreateWallModal] OPEN — focusing title input; profileId:",
+      profileId
+    );
+
     const t = setTimeout(() => inputRef.current?.focus(), 10);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        console.log("[CreateWallModal] ESC pressed — closing");
+        onClose();
+      }
     };
     document.addEventListener("keydown", onKey);
+    void dumpSession("open");
+
     return () => {
       clearTimeout(t);
       document.removeEventListener("keydown", onKey);
+      console.log("[CreateWallModal] CLOSE cleanup");
     };
-  }, [open, onClose]);
+  }, [open, onClose, profileId]);
+
+  // Track auth changes locally
+  useEffect(() => {
+    console.log("[CreateWallModal] useEffect(mount) subscribe auth");
+    let alive = true;
+
+    (async () => {
+      const s = await dumpSession("mount");
+      if (!alive) return;
+      setAuthReady(true);
+      setUserId(s?.user?.id ?? null);
+    })();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        console.log("[CreateWallModal] onAuthStateChange", {
+          event: _event,
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+        });
+        if (!alive) return;
+        setAuthReady(true);
+        setUserId(session?.user?.id ?? null);
+      }
+    );
+
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+      console.log("[CreateWallModal] unsubscribed auth");
+    };
+  }, []);
+
+  // Log important state changes
+  useEffect(() => {
+    console.log("[CreateWallModal] state", {
+      title,
+      background,
+      profileId,
+      authReady,
+      userId,
+      saving,
+    });
+  }, [title, background, profileId, authReady, userId, saving]);
 
   const create = async () => {
-    if (!title.trim() || saving) return;
-    setSaving(true);
-    const { data, error } = await supabase
-      .from("walls")
-      .insert({ title, background, profile_id: profileId ?? null }) // ✅ only one insert
-      .select()
-      .single();
-    setSaving(false);
-    if (error) {
-      console.error(error);
+    console.log("[CreateWallModal] create() clicked");
+    if (!title.trim()) {
+      console.log("[CreateWallModal] create() blocked — empty title");
       return;
     }
-    const created = data as Wall;
+    if (saving) {
+      console.log("[CreateWallModal] create() blocked — already saving");
+      return;
+    }
 
-    onCreated({
-      ...created,
-      memento_count: created.memento_count ?? 0,
-      image_url: created.image_url ?? undefined,
-    });
-    setTitle("");
-    setBackground("serene-sky");
-    onClose();
+    setSaving(true);
+    try {
+      const session = await dumpSession("create:before");
+      const uid = session?.user?.id ?? null;
+      console.log("[CreateWallModal] pre-insert payload", {
+        user_id: uid,
+        profile_id: profileId ?? null,
+        title,
+        background,
+        image_url: null,
+      });
+
+      if (!uid) {
+        console.warn("[CreateWallModal] create() abort — no session/user");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("walls")
+        .insert({
+          user_id: uid,
+          profile_id: profileId ?? null,
+          title,
+          background,
+          image_url: null,
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        console.error("[CreateWallModal] insert error", {
+          message: (error as any).message,
+          details: (error as any).details,
+          hint: (error as any).hint,
+          code: (error as any).code,
+        });
+        return;
+      }
+
+      console.log("[CreateWallModal] insert OK", data);
+
+      const created = data as Wall;
+      onCreated({
+        ...created,
+        memento_count: created.memento_count ?? 0,
+        image_url: created.image_url ?? undefined,
+      });
+
+      setTitle("");
+      setBackground("serene-sky");
+      onClose();
+    } catch (e) {
+      console.error("[CreateWallModal] unexpected error", e);
+    } finally {
+      setSaving(false);
+      void dumpSession("create:finally");
+    }
   };
 
-  if (!open) return null;
+  if (!open) {
+    console.log("[CreateWallModal] not open → returns null");
+    return null;
+  }
+
+  // 🔊 VISIBLE DEBUG BANNER
+  const DebugBanner = () => (
+    <div
+      style={{
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        fontSize: 12,
+        background: "#fff7ed",
+        color: "#7c2d12",
+        border: "1px solid #fed7aa",
+        borderRadius: 8,
+        padding: 8,
+        marginBottom: 12,
+      }}
+    >
+      <div>
+        <b>DEBUG</b> CreateWallModal
+      </div>
+      <div>
+        authReady: {String(authReady)} | userId: {userId ?? "null"}
+      </div>
+      <div>
+        profileId: {profileId ?? "null"} | saving: {String(saving)}
+      </div>
+      <div>
+        title: “{title}” | background: {background}
+      </div>
+      <button
+        type="button"
+        className="btn btn-ghost"
+        onClick={() => void dumpSession("manual-click")}
+        style={{ marginTop: 6 }}
+      >
+        Log Session Now
+      </button>
+    </div>
+  );
 
   return (
     <div
@@ -98,7 +263,7 @@ export default function CreateWallModal({
     >
       <div className="mdl-panel" enable-xr="true" data-z="70">
         <div className="mdl-header">
-          <h2 className="mdl-title">Create New Wall</h2>
+          <h2 className="mdl-title">Create New Wallsssss</h2>
           <button
             onClick={onClose}
             className="btn btn-ghost"
@@ -109,6 +274,8 @@ export default function CreateWallModal({
         </div>
 
         <div className="mdl-body">
+          <DebugBanner />
+
           <label className="mdl-label">
             Wall Title <span style={{ color: "#6d28d9" }}>*</span>
           </label>
@@ -134,7 +301,7 @@ export default function CreateWallModal({
                     onClick={() => setBackground(bg.id)}
                     className={`mdl-choice ${sel ? "mdl-choice--sel" : ""}`}
                   >
-                    <div className={`mdl-thumb ${bg.thumbClass}`}></div>
+                    <div className={`mdl-thumb ${bg.thumbClass}`} />
                     <div style={{ flex: 1 }}>
                       <div className="mdl-name">{bg.name}</div>
                       <div className="mdl-desc">{bg.desc}</div>

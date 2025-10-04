@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import type { Wall, Profile } from "../types";
 import CreateWallModal from "../components/CreateWallModal";
 import CreateProfileModal from "../components/CreateProfileModal";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import "../webspatial.css";
 import "../dashboard.css";
 
@@ -18,6 +19,8 @@ export default function Dashboard({
   selectedProfileId: string | null;
   onSelectProfile: (id: string | null) => void;
 }) {
+  console.log("[Dashboard] component rendering"); // <--- add this
+
   const [openWall, setOpenWall] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
 
@@ -39,6 +42,7 @@ export default function Dashboard({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // ---- Auth guard + session tracking
+  // ---- Auth: read user id for queries, but DO NOT redirect here
   useEffect(() => {
     let ignore = false;
 
@@ -47,20 +51,16 @@ export default function Dashboard({
       if (!ignore) {
         const uid = data.user?.id ?? null;
         setUserId(uid);
-        setAuthReady(true);
-        if (!uid) {
-          // no session → go to auth
-          window.location.hash = "/auth";
-        }
+        setAuthReady(true); // <-- mark ready even if uid null
       }
     };
 
-    // subscribe to auth changes (optional but nice)
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const uid = session?.user?.id ?? null;
-      setUserId(uid);
-      if (!uid) window.location.hash = "/auth";
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        setUserId(session?.user?.id ?? null);
+        // no redirects here
+      }
+    );
 
     void init();
     return () => {
@@ -96,14 +96,23 @@ export default function Dashboard({
   // ---- Walls loader (filter by profile id OR unassigned) — owned by user
   const loadWalls = useCallback(
     async (profileId: string | null) => {
+      console.log(
+        "[loadWalls] called with profileId:",
+        profileId,
+        "userId:",
+        userId
+      );
+
       if (!userId) {
+        console.warn("[loadWalls] no userId yet");
         setWalls([]);
         return;
       }
+
       let query = supabase
         .from("walls")
         .select("*")
-        .eq("user_id", userId) // filter by owner
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       query = profileId
@@ -111,18 +120,30 @@ export default function Dashboard({
         : query.is("profile_id", null);
 
       const { data: wallRows, error } = await query;
-      if (error || !wallRows) {
-        console.warn("load walls error:", error);
+
+      if (error) {
+        console.warn("[loadWalls] error:", error);
         setWalls([]);
         return;
       }
-      setWalls(wallRows as Wall[]);
+
+      console.log("[loadWalls] rows:", wallRows?.length ?? 0);
+      setWalls((wallRows ?? []) as Wall[]);
     },
     [userId]
   );
 
   // ✅ Drive wall loading directly off the controlled ID (and userId)
   useEffect(() => {
+    console.log(
+      "[Dashboard useEffect] authReady:",
+      authReady,
+      "userId:",
+      userId,
+      "selectedProfileId:",
+      selectedProfileId
+    );
+
     if (!authReady || userId === null) return;
     loadWalls(selectedProfileId ?? null);
   }, [authReady, userId, selectedProfileId, loadWalls]);
@@ -208,7 +229,7 @@ export default function Dashboard({
     return (
       <div className="dashboard">
         <header className="dash-header">
-          <div className="brand">Memento°</div>
+          <div className="brand">Memeeento°</div>
         </header>
         <main className="dash-main">Loading…</main>
       </div>

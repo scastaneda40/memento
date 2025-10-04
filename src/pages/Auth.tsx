@@ -12,7 +12,7 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const redirectTo = window.location.origin;
+  const redirectTo = `${window.location.origin}/auth/callback.html`;
 
   const handleSignIn = async () => {
     setBusy(true);
@@ -46,7 +46,7 @@ export default function Auth() {
     setErr(null);
     setMsg(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/#/auth`, // lands back here after reset
+      redirectTo: window.location.origin, // lands back here after reset
     });
     setBusy(false);
     if (error) setErr(error.message);
@@ -57,14 +57,27 @@ export default function Auth() {
   const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     setErr(null);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo }, // ← no #/anything here
+      options: { redirectTo },
     });
+
     if (error) {
       setBusy(false);
       setErr(error.message);
+      return;
     }
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      setErr(userError.message);
+    } else {
+      console.log("User ID:", userData.user?.id);
+    }
+
+    setBusy(false);
   };
 
   return (
@@ -110,7 +123,7 @@ export default function Auth() {
 
         {mode === "signin" && (
           <button style={primaryBtn} disabled={busy} onClick={handleSignIn}>
-            {busy ? "Signing in…" : "Sign in"}
+            {busy ? "Signing in…" : "Sign innnnn"}
           </button>
         )}
         {mode === "signup" && (
@@ -129,7 +142,7 @@ export default function Auth() {
         <div style={row}>
           {mode !== "signin" && (
             <button style={linkBtn} onClick={() => setMode("signin")}>
-              Have an account? Sign in
+              Have an account? Sign innnnn
             </button>
           )}
           {mode !== "signup" && (

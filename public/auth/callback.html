@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Signing you in…</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Signing you in…</p>
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      // Paste your real values here if import.meta.env isn’t available in /public:
+      const SUPABASE_URL = "<YOUR_SUPABASE_URL>";
+      const SUPABASE_ANON_KEY = "<YOUR_SUPABASE_ANON_KEY>";
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true, // let SDK do PKCE exchange here
+          flowType: "pkce",
+        },
+      });
+
+      // Just touching auth will trigger the exchange if ?code=… is present
+      try {
+        await supabase.auth.getSession();
+        window.location.replace("/#/dashboard");
+      } catch {
+        window.location.replace("/#/auth");
+      }
+    </script>
+  </body>
+</html>

@@ -5,25 +5,40 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import WallView from "./pages/WallView";
 import AuthView from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { Wall } from "./types";
 
-type Route = "landing" | "dashboard" | "wall" | "auth";
+type Route = "landing" | "dashboard" | "wall" | "auth" | "auth-callback";
 
+// Hash router for app views
 const getRoute = (): Route => {
   const h = window.location.hash;
   if (h.startsWith("#/dashboard")) return "dashboard";
   if (h.startsWith("#/wall")) return "wall";
+  if (h.startsWith("#/auth-callback")) return "auth-callback";
   if (h.startsWith("#/auth")) return "auth";
   return "landing";
 };
 
+// Path router for the OAuth return page (/auth/callback.html)
+const isOauthCallbackPath = (): boolean =>
+  window.location.pathname.endsWith("/auth/callback.html");
+
 export default function App() {
+  console.log("[APP] render");
+
   const [route, setRoute] = useState<Route>(getRoute());
   const [activeWall, setActiveWall] = useState<Wall | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null
   );
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null); // null = booting
+
+  // If we’re on /auth/callback.html, just run the AuthCallback and bail.
+  if (isOauthCallbackPath()) {
+    return <AuthCallback />;
+  }
 
   // Router
   useEffect(() => {
@@ -38,49 +53,39 @@ export default function App() {
     document.documentElement.classList.toggle("is-spatial", isSpatial);
   }, []);
 
-  // 🔑 NEW: Exchange OAuth code for a session (PKCE callback)
+  // Boot: read session once, then react to auth changes
   useEffect(() => {
-    (async () => {
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
-      const error = url.searchParams.get("error");
-
-      if (error) {
-        // optional: show a toast
-        console.warn("OAuth error:", error);
-      }
-
-      if (code) {
-        const { error: exErr } = await supabase.auth.exchangeCodeForSession(
-          code
-        );
-        if (exErr) {
-          console.error("exchangeCodeForSession failed:", exErr.message);
-        }
-        // strip query params from the URL (keeps hash router intact)
-        url.search = "";
-        window.history.replaceState({}, "", url.toString());
-      }
-
-      // after possible exchange, read current session
+    const init = async () => {
       const { data } = await supabase.auth.getSession();
       setIsAuthed(!!data.session);
-
       if (data.session && getRoute() === "landing") {
         window.location.hash = "/dashboard";
       }
-    })();
+    };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      const authed = !!session;
-      setIsAuthed(authed);
-      if (event === "SIGNED_IN") {
-        window.location.hash = "/dashboard";
-      } else if (event === "SIGNED_OUT") {
-        window.location.hash = "/auth";
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        setIsAuthed(!!session);
+        if (session) {
+          window.location.hash = "/dashboard";
+        } else {
+          window.location.hash = "/auth";
+        }
       }
-    });
-    return () => sub.subscription.unsubscribe();
+    );
+
+    void init();
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // (optional) small log
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("[auth] user:", data.session?.user?.id);
+    })();
   }, []);
 
   // Nav helpers
@@ -88,22 +93,18 @@ export default function App() {
   const goHome = () => (window.location.hash = "/");
   const openWall = (w: Wall) => {
     setActiveWall(w);
-    setSelectedProfileId(w.profile_id ?? null);
     window.location.hash = "/wall";
   };
 
   if (isAuthed === null) return null;
 
-  // If NOT signed in, only allow Landing and Auth
   if (!isAuthed) {
-    // if someone navigates to /dashboard or /wall while unauthenticated → push to /auth
     if (route === "dashboard" || route === "wall") {
       window.location.hash = "/auth";
-      return null; // stop rendering this frame
+      return null;
     }
     if (route === "auth") return <AuthView />;
 
-    // Landing: both actions go to /auth
     return (
       <Landing
         onPrimary={() => (window.location.hash = "/auth")}
@@ -124,15 +125,7 @@ export default function App() {
   }
 
   if (route === "wall" && activeWall) {
-    return (
-      <WallView
-        wall={activeWall}
-        onBack={(profileId) => {
-          setSelectedProfileId(profileId ?? null);
-          goToDashboard();
-        }}
-      />
-    );
+    return <WallView wall={activeWall} onBack={goToDashboard} />;
   }
 
   if (route === "auth") {
