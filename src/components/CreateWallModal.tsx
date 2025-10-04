@@ -215,43 +215,6 @@ export default function CreateWallModal({
     return null;
   }
 
-  // 🔊 VISIBLE DEBUG BANNER
-  const DebugBanner = () => (
-    <div
-      style={{
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-        fontSize: 12,
-        background: "#fff7ed",
-        color: "#7c2d12",
-        border: "1px solid #fed7aa",
-        borderRadius: 8,
-        padding: 8,
-        marginBottom: 12,
-      }}
-    >
-      <div>
-        <b>DEBUG</b> CreateWallModal
-      </div>
-      <div>
-        authReady: {String(authReady)} | userId: {userId ?? "null"}
-      </div>
-      <div>
-        profileId: {profileId ?? "null"} | saving: {String(saving)}
-      </div>
-      <div>
-        title: “{title}” | background: {background}
-      </div>
-      <button
-        type="button"
-        className="btn btn-ghost"
-        onClick={() => void dumpSession("manual-click")}
-        style={{ marginTop: 6 }}
-      >
-        Log Session Now
-      </button>
-    </div>
-  );
-
   return (
     <div
       className="mdl-overlay"
@@ -263,7 +226,7 @@ export default function CreateWallModal({
     >
       <div className="mdl-panel" enable-xr="true" data-z="70">
         <div className="mdl-header">
-          <h2 className="mdl-title">Create New Wallsssss</h2>
+          <h2 className="mdl-title">Create New Wall</h2>
           <button
             onClick={onClose}
             className="btn btn-ghost"
@@ -274,8 +237,6 @@ export default function CreateWallModal({
         </div>
 
         <div className="mdl-body">
-          <DebugBanner />
-
           <label className="mdl-label">
             Wall Title <span style={{ color: "#6d28d9" }}>*</span>
           </label>
