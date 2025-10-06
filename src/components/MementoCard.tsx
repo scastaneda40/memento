@@ -1,3 +1,4 @@
+// src/components/MementoCard.tsx
 import { useMemo, useRef, useState, useCallback } from "react";
 import type { Memento } from "../types";
 import "../memento.css";
@@ -19,7 +20,6 @@ export default function MementoCard({
   confirmDelete?: boolean;
   showDelete?: boolean;
 }) {
-  // drag state
   const latest = useRef<Memento>(m);
   latest.current = m;
 
@@ -27,8 +27,6 @@ export default function MementoCard({
     null
   );
   const [dragging, setDragging] = useState(false);
-
-  // --- resize state
   const [resizing, setResizing] = useState<null | {
     corner: Corner;
     mx: number;
@@ -38,14 +36,16 @@ export default function MementoCard({
     w: number;
   }>(null);
 
+  const [deleting, setDeleting] = useState(false);
+  const isActionDown = useRef(false);
+
   const MIN_W = 160;
   const MAX_W = 640;
   const GRID = 12;
 
+  // --- Drag
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-
-    // ignore when clicking actions or resize handles
     if (target.closest('[data-card-action="true"]')) return;
     if (target.closest('[data-resize="true"]')) return;
 
@@ -61,23 +61,18 @@ export default function MementoCard({
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Resize takes priority over drag
     if (resizing) {
       const { corner, mx, my, x, w } = resizing;
       const dx = e.clientX - mx;
       const dy = e.clientY - my;
 
-      // Project movement along the diagonal of the corner for a natural feel.
-      // Horizontal movement dominates width change; dy influences for diagonals.
       let delta = dx;
-      if (corner === "nw" || corner === "sw") delta = -dx; // dragging left grows width to the left
-      // small diagonal assist
+      if (corner === "nw" || corner === "sw") delta = -dx;
       delta += (corner === "nw" || corner === "ne" ? -dy : dy) * 0.15;
 
       let nextW = Math.round((w + delta) / GRID) * GRID;
       nextW = Math.max(MIN_W, Math.min(MAX_W, nextW));
 
-      // Keep opposite edge pinned by shifting x when resizing from the "west" corners
       let nextX = x;
       if (corner === "nw" || corner === "sw") {
         nextX = Math.round((x + (w - nextW)) / GRID) * GRID;
@@ -100,6 +95,7 @@ export default function MementoCard({
   };
 
   const endDrag = async () => {
+    if (isActionDown.current) return;
     if (resizing) {
       setResizing(null);
       await onCommit(latest.current);
@@ -111,27 +107,22 @@ export default function MementoCard({
     await onCommit(latest.current);
   };
 
-  // start resize from a corner
+  // --- Resize
   type Dir = "n" | "e" | "s" | "w" | "ne" | "nw" | "se" | "sw";
 
-  // START a resize from any edge/corner hot-zone
   const onResizeStart = (e: React.PointerEvent<HTMLDivElement>) => {
     const dir = (e.currentTarget.dataset.dir || "") as Dir;
-    // we only change width; ignore pure N/S drags
     if (!dir || dir === "n" || dir === "s") return;
 
     e.stopPropagation();
     e.preventDefault();
 
-    // capture on the card element so moves keep coming to us
     (e.currentTarget.parentElement as HTMLElement | null)
       ?.closest(".memento-card")
       ?.setPointerCapture?.(e.pointerId);
 
     const m0 = latest.current;
 
-    // Map edges to a “corner side” so width math stays the same.
-    // Right side growth uses 'se'; left side uses 'sw'.
     const corner: Corner =
       dir === "ne"
         ? "ne"
@@ -143,7 +134,7 @@ export default function MementoCard({
         ? "sw"
         : dir === "e"
         ? "se"
-        : /* dir === "w" */ "sw";
+        : "sw";
 
     setResizing({
       corner,
@@ -155,21 +146,26 @@ export default function MementoCard({
     });
   };
 
-  // CLEAN DELETE
+  // --- Delete
   const doDelete = useCallback(async () => {
+    if (deleting) return;
     if (typeof onDelete !== "function") {
-      console.warn(
-        "[MementoCard] onDelete is not a function; delete is a no-op."
-      );
+      console.warn("[MementoCard] onDelete missing");
       return;
     }
     if (confirmDelete) {
       const ok = window.confirm("Delete this Memento? This cannot be undone.");
       if (!ok) return;
     }
-    await onDelete(latest.current);
-  }, [onDelete, confirmDelete]);
+    try {
+      setDeleting(true);
+      await onDelete(latest.current);
+    } finally {
+      setDeleting(false);
+    }
+  }, [onDelete, confirmDelete, deleting]);
 
+  // --- Keys
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Delete" || e.key === "Backspace") {
       e.preventDefault();
@@ -177,7 +173,12 @@ export default function MementoCard({
     }
   };
 
-  // float / tilt animation seeds
+  // --- Pointer-blocker for actions
+  const markAction = (down: boolean) => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    isActionDown.current = down;
+  };
+
   const animVars = useMemo(
     () =>
       ({
@@ -214,7 +215,6 @@ export default function MementoCard({
       data-z={m.z}
       aria-label={m.title || "Memory card"}
     >
-      {/* Polaroid content */}
       <div className="polaroid">
         {m.kind === "photo" && m.media_url && (
           <img
@@ -254,6 +254,8 @@ export default function MementoCard({
       {showDelete && (
         <div
           className="card-actions"
+          onPointerDown={markAction(true)}
+          onPointerUp={markAction(false)}
           style={{
             position: "absolute",
             top: 8,
@@ -269,6 +271,9 @@ export default function MementoCard({
             data-card-action="true"
             aria-label="Delete memory"
             title="Delete"
+            disabled={deleting}
+            onPointerDown={markAction(true)}
+            onPointerUp={markAction(false)}
             onClick={(e) => {
               e.stopPropagation();
               void doDelete();
@@ -282,93 +287,42 @@ export default function MementoCard({
               padding: "6px 8px",
               cursor: "pointer",
               lineHeight: 0,
-              pointerEvents: "auto",
             }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden
-            >
-              <path d="M3 6h18v2H3V6zm2 3h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 9zm5-6h4l1 2H9l1-2z" />
-            </svg>
+            {deleting ? (
+              "Deleting…"
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path d="M3 6h18v2H3V6zm2 3h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 9zm5-6h4l1 2H9l1-2z" />
+              </svg>
+            )}
           </button>
         </div>
       )}
 
-      {/* Edge / corner hotspots (no visible icons) */}
-      <div
-        className="rz-edge rz-top"
-        data-resize="true"
-        data-dir="n"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-edge rz-right"
-        data-resize="true"
-        data-dir="e"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-edge rz-bottom"
-        data-resize="true"
-        data-dir="s"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-edge rz-left"
-        data-resize="true"
-        data-dir="w"
-        onPointerDown={onResizeStart}
-      />
+      {/* Resize handles */}
+      {["n", "e", "s", "w", "nw", "ne", "se", "sw"].map((dir) => (
+        <div
+          key={dir}
+          className={`rz-${
+            dir.includes("n") || dir.includes("s") ? "edge" : "corner"
+          } rz-${dir}`}
+          data-resize="true"
+          data-dir={dir}
+          onPointerDown={onResizeStart}
+        />
+      ))}
 
-      <div
-        className="rz-corner rz-nw"
-        data-resize="true"
-        data-dir="nw"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-corner rz-ne"
-        data-resize="true"
-        data-dir="ne"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-corner rz-se"
-        data-resize="true"
-        data-dir="se"
-        onPointerDown={onResizeStart}
-      />
-      <div
-        className="rz-corner rz-sw"
-        data-resize="true"
-        data-dir="sw"
-        onPointerDown={onResizeStart}
-      />
-
-      {/* Optional live size chip (only while resizing) */}
       <div className="rz-sizechip" aria-hidden>
         {Math.round(m.width ?? 260)}×{Math.round(((m.width ?? 260) * 9) / 16)}
       </div>
     </div>
   );
 }
-
-/** Small diagonal arrows icon (↗︎↙︎) */
-// function ResizeGlyph() {
-//   return (
-//     <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden>
-//       <path
-//         d="M7 17l10-10M11 7h6v6"
-//         fill="none"
-//         stroke="currentColor"
-//         strokeWidth="2"
-//         strokeLinecap="round"
-//       />
-//     </svg>
-//   );
-// }
