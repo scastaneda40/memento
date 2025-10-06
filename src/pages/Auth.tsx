@@ -58,16 +58,21 @@ export default function Auth() {
   const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     setErr(null);
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log("[oauth] start", { provider, redirectTo: REDIRECT_TO });
+    const { error, data, url } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: REDIRECT_TO, // <- origin
+        redirectTo: REDIRECT_TO,
         queryParams: { prompt: "select_account", access_type: "offline" },
       },
     });
+    // On success the browser will navigate away, so we only handle errors:
     if (error) {
+      console.error("[oauth] immediate error", error);
       setBusy(false);
       setErr(error.message);
+    } else {
+      console.log("[oauth] initiated (expect navigation)", { data, url });
     }
   };
 

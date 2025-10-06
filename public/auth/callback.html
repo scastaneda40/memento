@@ -22,7 +22,8 @@
 
       // 🔴 Replace with your real values (no envs in /public)
       const SUPABASE_URL = "https://glpztusxruugdvujcitc.supabase.co";
-      const SUPABASE_ANON_KEY = "<YOUR_ANON_KEY>";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscHp0dXN4cnV1Z2R2dWpjaXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTYxMzEsImV4cCI6MjA3MzIzMjEzMX0.qiB9SfjOYzkIKv2D_vap_9hgTvpVzJIZuWFPPSMXrrU";
 
       // Let the SDK do the PKCE exchange on this static page
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -47,6 +48,13 @@
         const origin = window.location.origin;
         window.location.replace(`${origin}/#/auth`);
       }
+
+      console.log("[callback] loaded", window.location.href);
+      const { data, error } = await supabase.auth.getSession();
+      console.log("[callback] getSession result", {
+        hasSession: !!data?.session,
+        error: error?.message,
+      });
     </script>
   </body>
 </html>
