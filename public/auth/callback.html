@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Signing you in…</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Signing you in…</p>
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      // 🔴 Replace with your real values (no envs in /public)
+      const SUPABASE_URL = "https://glpztusxruugdvujcitc.supabase.co";
+      const SUPABASE_ANON_KEY = "<YOUR_ANON_KEY>";
+
+      // Let the SDK do the PKCE exchange on this static page
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          flowType: "pkce",
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true, // <-- important here
+        },
+      });
+
+      try {
+        // This triggers the exchange if ?code=... is present
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        // Go back to the SPA
+        const origin = window.location.origin;
+        window.location.replace(`${origin}/#/dashboard`);
+      } catch (e) {
+        console.error("[callback] auth error:", e?.message || e);
+        const origin = window.location.origin;
+        window.location.replace(`${origin}/#/auth`);
+      }
+    </script>
+  </body>
+</html>
