@@ -3,6 +3,9 @@
 <html lang="en" <% if (isSpatial) { %>
   class="is-spatial"<% } %>>
   <head>
+    <!-- inside <head> -->
+    <meta name="xr-env" content="<%= XR_ENV %>" />
+
     <!-- BUILD_PROBE: INDEX_HTML -->
     <script>
       window.__INDEX_PROBE__ = "INDEX:" + Date.now();

@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "visionos": "webspatial-builder run --base=https://localhost:5173/webspatial/avp",
-    "build:visionos": "npm run build && npm run visionos"
+    "build:visionos": "npx webspatial-builder build --base=https://localhost:5173/ --bundle-id=com.stephensmith.mementoapp --teamId=7R8CGWPBQT"
   },
   "dependencies": {
     "@google/model-viewer": "^4.1.0",
@@ -38,5 +37,5 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.24.0"
-}
+  }
 }

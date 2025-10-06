@@ -108,3 +108,14 @@ html.is-spatial .subtitle,
 html.is-spatial .link-secondary {
   color: rgba(255, 255, 255, 0.98);
 }
+
+html.is-spatial,
+html.is-spatial body {
+  background: transparent !important;
+  --xr-background-material: translucent; /* lets the system show the real 3D environment */
+}
+
+html.is-spatial .dashboard {
+  background: transparent !important;
+  box-shadow: none;
+}

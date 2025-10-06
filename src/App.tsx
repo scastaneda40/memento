@@ -8,94 +8,59 @@ import AuthView from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { Wall } from "./types";
+import { IS_AVP } from "./env";
 
-type Route = "landing" | "dashboard" | "wall" | "auth" | "auth-callback";
+// src/App.tsx (only the routing bits shown)
+
+type Route = "landing" | "dashboard" | "wall" | "auth" | "authcb";
 
 // Hash router for app views
 const getRoute = (): Route => {
   const h = window.location.hash;
   if (h.startsWith("#/dashboard")) return "dashboard";
   if (h.startsWith("#/wall")) return "wall";
-  if (h.startsWith("#/auth-callback")) return "auth-callback";
+  if (h.startsWith("#/auth/callback")) return "authcb"; // <-- correct path
   if (h.startsWith("#/auth")) return "auth";
   return "landing";
 };
 
-// Path router for the OAuth return page (/auth/callback.html)
-const isOauthCallbackPath = (): boolean =>
-  window.location.pathname.endsWith("/auth/callback.html");
-
 export default function App() {
-  console.log("[APP] render");
-
   const [route, setRoute] = useState<Route>(getRoute());
   const [activeWall, setActiveWall] = useState<Wall | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null
   );
-  const [isAuthed, setIsAuthed] = useState<boolean | null>(null); // null = booting
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
 
-  // If we’re on /auth/callback.html, just run the AuthCallback and bail.
-  if (isOauthCallbackPath()) {
-    return <AuthCallback />;
-  }
-
-  // Router
   useEffect(() => {
     const onHash = () => setRoute(getRoute());
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // Spatial CSS toggle
+  // session boot + auth change handling (your existing code is fine)
   useEffect(() => {
-    const isSpatial = (window as any).XR_ENV === "avp";
-    document.documentElement.classList.toggle("is-spatial", isSpatial);
-  }, []);
-
-  // Boot: read session once, then react to auth changes
-  useEffect(() => {
-    const init = async () => {
+    (async () => {
       const { data } = await supabase.auth.getSession();
       setIsAuthed(!!data.session);
       if (data.session && getRoute() === "landing") {
         window.location.hash = "/dashboard";
       }
-    };
+    })();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
+      (_evt: AuthChangeEvent, session: Session | null) => {
         setIsAuthed(!!session);
-        if (session) {
-          window.location.hash = "/dashboard";
-        } else {
-          window.location.hash = "/auth";
-        }
+        window.location.hash = session ? "/dashboard" : "/auth";
       }
     );
 
-    void init();
     return () => subscription.unsubscribe();
   }, []);
 
-  // (optional) small log
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      console.log("[auth] user:", data.session?.user?.id);
-    })();
-  }, []);
-
-  // Nav helpers
-  const goToDashboard = () => (window.location.hash = "/dashboard");
-  const goHome = () => (window.location.hash = "/");
-  const openWall = (w: Wall) => {
-    setActiveWall(w);
-    window.location.hash = "/wall";
-  };
-
+  // ---- unauthenticated view gating
   if (isAuthed === null) return null;
 
   if (!isAuthed) {
@@ -103,21 +68,20 @@ export default function App() {
       window.location.hash = "/auth";
       return null;
     }
+    if (route === "authcb") return <AuthCallback />; // let PKCE exchange run
     if (route === "auth") return <AuthView />;
-
-    return (
-      <Landing
-        onPrimary={() => (window.location.hash = "/auth")}
-        onViewWalls={() => (window.location.hash = "/auth")}
-      />
-    );
+    return <Landing />;
   }
 
+  // ---- authenticated routes
   if (route === "dashboard") {
     return (
       <Dashboard
-        goHome={goHome}
-        onOpenWall={openWall}
+        goHome={() => (window.location.hash = "/")}
+        onOpenWall={(w) => {
+          setActiveWall(w);
+          window.location.hash = "/wall";
+        }}
         selectedProfileId={selectedProfileId}
         onSelectProfile={setSelectedProfileId}
       />
@@ -125,14 +89,19 @@ export default function App() {
   }
 
   if (route === "wall" && activeWall) {
-    return <WallView wall={activeWall} onBack={goToDashboard} />;
+    return (
+      <WallView
+        wall={activeWall}
+        onBack={() => (window.location.hash = "/dashboard")}
+      />
+    );
   }
 
-  if (route === "auth") {
-    goToDashboard();
+  if (route === "auth" || route === "authcb") {
+    window.location.hash = "/dashboard";
     return null;
   }
 
-  goToDashboard();
+  window.location.hash = "/dashboard";
   return null;
 }

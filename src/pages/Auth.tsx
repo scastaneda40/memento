@@ -12,7 +12,9 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const redirectTo = `${window.location.origin}/auth/callback.html`;
+  // SPA hash-based callback that renders <AuthCallback /> and runs PKCE exchange
+  const HASH_CALLBACK =
+    "https://memento-eight-amber.vercel.app/#/auth/callback";
 
   const handleSignIn = async () => {
     setBusy(true);
@@ -34,7 +36,8 @@ export default function Auth() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: redirectTo },
+      // Magic-link redirect should also land on the SPA callback route
+      options: { emailRedirectTo: HASH_CALLBACK },
     });
     setBusy(false);
     if (error) setErr(error.message);
@@ -45,39 +48,34 @@ export default function Auth() {
     setBusy(true);
     setErr(null);
     setMsg(null);
+    // After reset, send them back to the SPA to complete auth flow
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin, // lands back here after reset
+      redirectTo: HASH_CALLBACK,
     });
     setBusy(false);
     if (error) setErr(error.message);
     else setMsg("Password reset link sent. Check your email.");
   };
 
-  // inside oauth() in Auth.tsx
+  // OAuth: full-page redirect to SPA callback
   const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     setErr(null);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo },
+      options: {
+        redirectTo: HASH_CALLBACK,
+        // Helps Google show the account chooser reliably
+        queryParams: { prompt: "select_account", access_type: "offline" },
+      },
     });
 
+    // On success, the browser will navigate away; no need to unset busy.
     if (error) {
       setBusy(false);
       setErr(error.message);
-      return;
     }
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError) {
-      setErr(userError.message);
-    } else {
-      console.log("User ID:", userData.user?.id);
-    }
-
-    setBusy(false);
   };
 
   return (
@@ -123,7 +121,7 @@ export default function Auth() {
 
         {mode === "signin" && (
           <button style={primaryBtn} disabled={busy} onClick={handleSignIn}>
-            {busy ? "Signing in…" : "Sign innnnn"}
+            {busy ? "Signing in…" : "Sign in"}
           </button>
         )}
         {mode === "signup" && (
@@ -142,7 +140,7 @@ export default function Auth() {
         <div style={row}>
           {mode !== "signin" && (
             <button style={linkBtn} onClick={() => setMode("signin")}>
-              Have an account? Sign innnnn
+              Have an account? Sign in
             </button>
           )}
           {mode !== "signup" && (
@@ -184,7 +182,7 @@ export default function Auth() {
   );
 }
 
-/* tiny inline styles so you don't need a new CSS file */
+/* styles unchanged */
 const wrap: React.CSSProperties = {
   minHeight: "100vh",
   display: "grid",
@@ -220,7 +218,7 @@ const primaryBtn: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: 10,
-  border: "0",
+  border: 0,
   fontWeight: 700,
   cursor: "pointer",
   background: "#6d28d9",
