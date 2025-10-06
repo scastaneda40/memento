@@ -1,48 +1,47 @@
 // vite.config.ts
-import { defineConfig, loadEnv, type ConfigEnv } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import basicSsl from "@vitejs/plugin-basic-ssl";
 import webSpatial from "@webspatial/vite-plugin";
 import { createHtmlPlugin } from "vite-plugin-html";
 
-export default defineConfig(({ mode }: ConfigEnv) => {
-  // Load .env files (prefers .env.local for local dev)
-  const env = loadEnv(mode ?? "", process.cwd(), "");
+// Ensure VITE_BASE ends with a trailing slash when set.
+function normalizeBase(v?: string) {
+  if (!v) return "/";
+  return v.endsWith("/") ? v : v + "/";
+}
 
-  // Accept both Vercel XR_ENV and local VITE_XR_ENV
-  const raw = env.VITE_XR_ENV || process.env.XR_ENV || "web";
-  // Map "avp" -> "webspatial" (what your CSS/logic expects)
-  const XR_ENV = raw === "avp" ? "webspatial" : raw;
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  // XR_ENV is for WebSpatial (“avp” when targeting Vision Pro)
+  const XR_ENV = env.XR_ENV || "web";
+  // VITE_BASE controls the public base path (must match the URL you’ll pass to the builder)
+  const VITE_BASE = normalizeBase(
+    env.VITE_BASE || (XR_ENV === "avp" ? "/webspatial/avp/" : "/")
+  );
 
   console.log("🚀 ~ mode:", mode);
-  console.log("🚀 ~ VITE_XR_ENV (normalized):", XR_ENV);
+  console.log("🚀 ~ XR_ENV:", XR_ENV);
+  console.log("🚀 ~ VITE_BASE:", VITE_BASE);
 
   return {
+    base: VITE_BASE,
     plugins: [
-      basicSsl(),
-      react(),
-      webSpatial(),
+      react({ jsxImportSource: "@webspatial/react-sdk" }),
+      webSpatial({ outputDir: "" }),
       createHtmlPlugin({
-        inject: { data: { XR_ENV } }, // <- used by index.html
+        inject: {
+          data: {
+            XR_ENV, // for deciding is-spatial class
+            HTML_BASE: VITE_BASE, // used by index.html to prefix /src/main.tsx
+          },
+        },
       }),
     ],
     define: {
-      // handy for TS/JS runtime checks if you want
-      __XR_ENV__: JSON.stringify(env.VITE_XR_ENV ?? "web"),
+      __XR_ENV__: JSON.stringify(XR_ENV),
+      __XR_ENV_BASE__: JSON.stringify(VITE_BASE),
     },
-    resolve: {
-      alias: [{ find: /^~\//, replacement: "/" }],
-    },
-    server: {
-      host: true,
-      port: 5173,
-      strictPort: true,
-      headers: {
-        "Cache-Control": "no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    },
-    build: { outDir: "dist" },
+    resolve: { alias: {} },
+    build: { outDir: XR_ENV === "avp" ? "dist/webspatial/avp" : "dist" },
   };
 });
