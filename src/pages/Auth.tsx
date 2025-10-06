@@ -12,9 +12,8 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  // SPA hash-based callback that renders <AuthCallback /> and runs PKCE exchange
-  const HASH_CALLBACK =
-    "https://memento-eight-amber.vercel.app/#/auth/callback";
+  // 👉 critical: send users back to the site root (no hash)
+  const REDIRECT_TO = window.location.origin;
 
   const handleSignIn = async () => {
     setBusy(true);
@@ -36,8 +35,7 @@ export default function Auth() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      // Magic-link redirect should also land on the SPA callback route
-      options: { emailRedirectTo: HASH_CALLBACK },
+      options: { emailRedirectTo: REDIRECT_TO }, // <- origin
     });
     setBusy(false);
     if (error) setErr(error.message);
@@ -48,30 +46,25 @@ export default function Auth() {
     setBusy(true);
     setErr(null);
     setMsg(null);
-    // After reset, send them back to the SPA to complete auth flow
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: HASH_CALLBACK,
+      redirectTo: REDIRECT_TO, // <- origin
     });
     setBusy(false);
     if (error) setErr(error.message);
     else setMsg("Password reset link sent. Check your email.");
   };
 
-  // OAuth: full-page redirect to SPA callback
+  // OAuth full-page redirect; Supabase will append ?code=... to REDIRECT_TO
   const oauth = async (provider: "google" | "apple") => {
     setBusy(true);
     setErr(null);
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: HASH_CALLBACK,
-        // Helps Google show the account chooser reliably
+        redirectTo: REDIRECT_TO, // <- origin
         queryParams: { prompt: "select_account", access_type: "offline" },
       },
     });
-
-    // On success, the browser will navigate away; no need to unset busy.
     if (error) {
       setBusy(false);
       setErr(error.message);
@@ -87,7 +80,6 @@ export default function Auth() {
         </h1>
 
         <div style={{ height: 10 }} />
-
         {err && <div style={errorBox}>{err}</div>}
         {msg && <div style={infoBox}>{msg}</div>}
 
@@ -182,7 +174,7 @@ export default function Auth() {
   );
 }
 
-/* styles unchanged */
+/* tiny inline styles */
 const wrap: React.CSSProperties = {
   minHeight: "100vh",
   display: "grid",

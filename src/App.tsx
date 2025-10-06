@@ -31,6 +31,29 @@ export default function App() {
   );
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
 
+  // src/App.tsx
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hasCode = url.searchParams.get("code");
+    if (!hasCode) return;
+
+    (async () => {
+      const { error } = await supabase.auth.exchangeCodeForSession(
+        url.toString()
+      );
+      if (error) {
+        console.error("[oauth] exchange failed:", error.message);
+        // send back to auth if you want:
+        window.location.hash = "/auth";
+        return;
+      }
+      // strip ?code from URL then go to dashboard
+      url.search = "";
+      window.history.replaceState({}, "", url.toString());
+      window.location.hash = "/dashboard";
+    })();
+  }, []);
+
   useEffect(() => {
     const onHash = () => setRoute(getRoute());
     window.addEventListener("hashchange", onHash);
