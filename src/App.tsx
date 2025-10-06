@@ -46,7 +46,7 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      (evt: AuthChangeEvent, session: Session | null) => {
+      (_evt: AuthChangeEvent, session: Session | null) => {
         // Optional log:
         // console.log("[auth] event:", evt, "user:", session?.user?.id ?? null);
         setIsAuthed(!!session);
