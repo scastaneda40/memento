@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <% const XR = (typeof XR_ENV !== 'undefined' && XR_ENV) ? XR_ENV : 'web'; %> <%
-const isSpatial = XR === 'webspatial'; %>
+const isSpatial = XR === 'webspatial' || XR === 'avp'; %>
 <html lang="en" <% if (isSpatial) { %>
   class="is-spatial"<% } %>>
   <head>
@@ -10,10 +10,15 @@ const isSpatial = XR === 'webspatial'; %>
       window.XR_ENV = "<%= XR %>";
       console.log("[INDEX] XR_ENV =", window.XR_ENV);
     </script>
+
+    <!-- IMPORTANT: use the base for manifest too -->
+    <link rel="manifest" href="<%= __XR_ENV_BASE__ %>/manifest.webmanifest" />
     <title>Memento°</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- IMPORTANT: use the base for your entry script -->
+    <script type="module" src="<%= __XR_ENV_BASE__ %>/src/main.tsx"></script>
   </body>
 </html>

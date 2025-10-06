@@ -1,17 +1,18 @@
-/* Reset to kill the weird outer halo */
+/* Reset base styles */
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
 }
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Background for the app (kept, but hidden by the full sheet below) */
+/* Non-spatial background */
 html:not(.is-spatial),
 html:not(.is-spatial) body,
 html:not(.is-spatial) #root {
@@ -23,34 +24,24 @@ html:not(.is-spatial) #root {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* ----- Landing full-screen sheet ----- */
-
+/* ----- Landing page (web fallback) ----- */
 .landing {
   min-height: 100dvh;
 }
 
-/* Make the panel a full-viewport white sheet */
 .landing .panel {
   min-height: 100dvh;
   width: 100%;
-  background: #fff; /* full white */
-  border: 0; /* no card border */
-  border-radius: 0; /* edge-to-edge sheet */
-  box-shadow: none; /* remove drop shadow */
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   display: grid;
-  place-items: center; /* center inner content both axes */
+  place-items: center;
 }
 
-/* In spatial, keep it transparent so visionOS draws the window */
 html.is-spatial .landing .panel {
   background: transparent !important;
-}
-
-/* Content block centered with sensible max width */
-.panel .panel-inner {
-  width: min(820px, 92vw);
-  text-align: center;
-  padding: clamp(32px, 6vw, 72px) 24px;
 }
 
 /* Typography */
@@ -61,6 +52,7 @@ html.is-spatial .landing .panel {
   line-height: 1.02;
   color: #0f172a;
 }
+
 .subtitle {
   margin: 0 0 28px;
   font-size: clamp(18px, 2.2vw, 26px);
@@ -68,15 +60,7 @@ html.is-spatial .landing .panel {
   opacity: 0.9;
 }
 
-/* Column actions, centered */
-.actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Buttons/links */
+/* Buttons */
 .btn-primary {
   padding: 14px 28px;
   border-radius: 14px;
@@ -88,10 +72,12 @@ html.is-spatial .landing .panel {
   box-shadow: 0 14px 28px rgba(109, 40, 217, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
+
 .btn-primary:hover {
   transform: translateY(-1px);
   background: #5b21b6;
 }
+
 .btn-primary:active {
   transform: translateY(0);
 }
@@ -101,42 +87,95 @@ html.is-spatial .landing .panel {
   text-decoration: underline;
   font-weight: 600;
 }
-/* Make the page itself transparent in spatial mode */
+
+/* ----------------------------------------- */
+/* --------  SPATIAL MODE CLEANUP  --------- */
+/* ----------------------------------------- */
+
+/* Fully transparent root and background */
 html.is-spatial,
 html.is-spatial body,
 html.is-spatial #root {
   background: transparent !important;
+  --xr-background-material: transparent;
 }
 
-/* Common app wrappers that often add a panel */
+/* Ensure app wrappers don’t repaint */
 html.is-spatial .landing,
 html.is-spatial .app,
 html.is-spatial .app-surface,
 html.is-spatial .dashboard,
 html.is-spatial .panel,
+html.is-spatial .panel-inner,
 html.is-spatial .content,
-html.is-spatial .page {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  backdrop-filter: none !important;
-}
-
-/* If you have any full-bleed containers that set a white bg */
+html.is-spatial .page,
+html.is-spatial #root > .app,
+html.is-spatial #root > .app-shell,
+html.is-spatial #root > .dashboard,
+html.is-spatial #root > .page,
 html.is-spatial [class*="container"],
 html.is-spatial [class*="wrapper"],
 html.is-spatial [class*="surface"] {
   background: transparent !important;
-  box-shadow: none !important;
+  background-image: none !important;
   backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
-/* In dev, hide any error overlays that paint a sheet */
+/* Remove pseudo-element decorations */
+html.is-spatial .dashboard::before,
+html.is-spatial .panel::before,
+html.is-spatial .page::before {
+  content: none !important;
+}
+
+/* Optional: visual debug border */
+html.is-spatial #root {
+  outline: 2px dashed magenta;
+}
+
+/* Reset ALL elements and pseudo-elements */
+/* html.is-spatial * {
+  background: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+} */
+
+/* html.is-spatial *::before,
+html.is-spatial *::after {
+  content: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+} */
+
+/* Transparent window shell only */
+html.is-spatial,
+html.is-spatial body,
+html.is-spatial #root {
+  background: transparent !important;
+  --xr-background-material: transparent;
+}
+
+/* Let your main surface be transparent … */
+html.is-spatial .dashboard {
+  background: transparent !important;
+}
+
+/* …but give cards a material so they’re visible in space */
+html.is-spatial .card {
+  --xr-background-material: translucent;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* Hide Vite overlays in dev */
 #vite-plugin-checker-error-overlay,
 #vite-dev-server-overlay {
   display: none !important;
-}
-
-html.is-spatial #root {
-  outline: 2px dashed magenta;
 }

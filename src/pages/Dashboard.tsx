@@ -5,8 +5,17 @@ import type { Wall, Profile } from "../types";
 import CreateWallModal from "../components/CreateWallModal";
 import CreateProfileModal from "../components/CreateProfileModal";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { IS_SPATIAL } from "../env"; // <-- import spatial flag
 import "../webspatial.css";
 import "../dashboard.css";
+
+const spatialClear: React.CSSProperties = {
+  background: "transparent",
+  backdropFilter: "none",
+  WebkitBackdropFilter: "none",
+  boxShadow: "none",
+  border: "none",
+};
 
 export default function Dashboard({
   goHome,
@@ -19,7 +28,7 @@ export default function Dashboard({
   selectedProfileId: string | null;
   onSelectProfile: (id: string | null) => void;
 }) {
-  console.log("[Dashboard] component rendering"); // <--- add this
+  console.log("[Dashboard] component rendering");
 
   const [openWall, setOpenWall] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
@@ -41,8 +50,7 @@ export default function Dashboard({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // ---- Auth guard + session tracking
-  // ---- Auth: read user id for queries, but DO NOT redirect here
+  // ---- Auth: read user id for queries (no redirects here)
   useEffect(() => {
     let ignore = false;
 
@@ -51,14 +59,13 @@ export default function Dashboard({
       if (!ignore) {
         const uid = data.user?.id ?? null;
         setUserId(uid);
-        setAuthReady(true); // <-- mark ready even if uid null
+        setAuthReady(true);
       }
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => {
         setUserId(session?.user?.id ?? null);
-        // no redirects here
       }
     );
 
@@ -76,7 +83,7 @@ export default function Dashboard({
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", userId) // filter by owner
+        .eq("user_id", userId)
         .order("display_name", { ascending: true });
       if (!error && data) setProfiles(data as Profile[]);
       else setProfiles([]);
@@ -96,15 +103,9 @@ export default function Dashboard({
   // ---- Walls loader (filter by profile id OR unassigned) — owned by user
   const loadWalls = useCallback(
     async (profileId: string | null) => {
-      console.log(
-        "[loadWalls] called with profileId:",
-        profileId,
-        "userId:",
-        userId
-      );
+      console.log("[loadWalls] profileId:", profileId, "userId:", userId);
 
       if (!userId) {
-        console.warn("[loadWalls] no userId yet");
         setWalls([]);
         return;
       }
@@ -120,30 +121,18 @@ export default function Dashboard({
         : query.is("profile_id", null);
 
       const { data: wallRows, error } = await query;
-
       if (error) {
         console.warn("[loadWalls] error:", error);
         setWalls([]);
         return;
       }
-
-      console.log("[loadWalls] rows:", wallRows?.length ?? 0);
       setWalls((wallRows ?? []) as Wall[]);
     },
     [userId]
   );
 
-  // ✅ Drive wall loading directly off the controlled ID (and userId)
+  // Load walls when auth/profile changes
   useEffect(() => {
-    console.log(
-      "[Dashboard useEffect] authReady:",
-      authReady,
-      "userId:",
-      userId,
-      "selectedProfileId:",
-      selectedProfileId
-    );
-
     if (!authReady || userId === null) return;
     loadWalls(selectedProfileId ?? null);
   }, [authReady, userId, selectedProfileId, loadWalls]);
@@ -215,7 +204,6 @@ export default function Dashboard({
   const selectProfile = (p: Profile) => {
     onSelectProfile(p.id);
     setMenuOpen(false);
-    // Optional: optimistic local object for immediate avatar/name update
     setSelectedProfile(p);
   };
 
@@ -227,18 +215,30 @@ export default function Dashboard({
   // Simple guard/loading state
   if (!authReady) {
     return (
-      <div className="dashboard">
-        <header className="dash-header">
-          <div className="brand">Memeeento°</div>
+      <div className="dashboard" style={IS_SPATIAL ? spatialClear : undefined}>
+        <header
+          className="dash-header"
+          style={IS_SPATIAL ? spatialClear : undefined}
+        >
+          <div className="brand">Memento°</div>
         </header>
-        <main className="dash-main">Loading…</main>
+        <main
+          className="dash-main"
+          style={IS_SPATIAL ? spatialClear : undefined}
+        >
+          Loading…
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
-      <header className="dash-header" enable-xr-monitor="true">
+    <div className="dashboard" style={IS_SPATIAL ? spatialClear : undefined}>
+      <header
+        className="dash-header"
+        enable-xr-monitor="true"
+        style={IS_SPATIAL ? spatialClear : undefined}
+      >
         <div className="brand" onClick={goHome} enable-xr="true" data-z="40">
           Memento°
         </div>
@@ -250,7 +250,6 @@ export default function Dashboard({
             enable-xr="true"
             data-z="40"
           >
-            {/* User icon */}
             <svg
               className="btn-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -271,7 +270,6 @@ export default function Dashboard({
             enable-xr="true"
             data-z="40"
           >
-            {/* Plus icon */}
             <svg
               className="btn-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -299,7 +297,6 @@ export default function Dashboard({
             enable-xr="true"
             data-z="40"
           >
-            {/* Logout icon */}
             <svg
               className="btn-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -325,7 +322,7 @@ export default function Dashboard({
         </div>
       </header>
 
-      <main className="dash-main">
+      <main className="dash-main" style={IS_SPATIAL ? spatialClear : undefined}>
         {/* Title Group with square chevron menu */}
         <div className="title-row">
           <div className="title-group">
@@ -434,6 +431,7 @@ export default function Dashboard({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && onOpenWall(w)}
+                  style={IS_SPATIAL ? undefined : undefined}
                 >
                   <div className="thumb">
                     {cover ? (
@@ -461,20 +459,20 @@ export default function Dashboard({
         </section>
       </main>
 
-      {/* Create Wall (assign to selected profile if present) */}
+      {/* Create Wall */}
       <CreateWallModal
         open={openWall}
         onClose={() => setOpenWall(false)}
         onCreated={(w) => setWalls((ws) => [w, ...ws])}
-        profileId={selectedProfileId /* use controlled id */}
+        profileId={selectedProfileId}
       />
 
-      {/* Create Profile (after create, switch to it) */}
+      {/* Create Profile */}
       <CreateProfileModal
         open={openProfile}
         onClose={() => setOpenProfile(false)}
         onCreated={(p) => {
-          onSelectProfile(p.id); // keep parent in sync
+          onSelectProfile(p.id);
           setOpenProfile(false);
           setProfiles((prev) =>
             prev.find((x) => x.id === p.id) ? prev : [p, ...prev]
