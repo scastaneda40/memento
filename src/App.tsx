@@ -8,7 +8,6 @@ import AuthView from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { Wall } from "./types";
-import { IS_AVP } from "./env";
 
 // src/App.tsx (only the routing bits shown)
 
