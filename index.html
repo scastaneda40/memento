@@ -1,18 +1,15 @@
 <!DOCTYPE html>
-<% const isSpatial = XR_ENV === 'avp'; %>
+<% const XR = (typeof XR_ENV !== 'undefined' && XR_ENV) ? XR_ENV : 'web'; %> <%
+const isSpatial = XR === 'webspatial'; %>
 <html lang="en" <% if (isSpatial) { %>
   class="is-spatial"<% } %>>
   <head>
-    <!-- inside <head> -->
-    <meta name="xr-env" content="<%= XR_ENV %>" />
-
-    <!-- BUILD_PROBE: INDEX_HTML -->
-    <script>
-      window.__INDEX_PROBE__ = "INDEX:" + Date.now();
-    </script>
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="xr-env" content="<%= XR %>" />
+    <script>
+      window.XR_ENV = "<%= XR %>";
+      console.log("[INDEX] XR_ENV =", window.XR_ENV);
+    </script>
     <title>Memento°</title>
   </head>
   <body>

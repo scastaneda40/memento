@@ -101,21 +101,42 @@ html.is-spatial .landing .panel {
   text-decoration: underline;
   font-weight: 600;
 }
-
-/* Spatial color tweaks so text reads on the room */
-html.is-spatial .title,
-html.is-spatial .subtitle,
-html.is-spatial .link-secondary {
-  color: rgba(255, 255, 255, 0.98);
-}
-
+/* Make the page itself transparent in spatial mode */
 html.is-spatial,
-html.is-spatial body {
+html.is-spatial body,
+html.is-spatial #root {
   background: transparent !important;
-  --xr-background-material: translucent; /* lets the system show the real 3D environment */
 }
 
-html.is-spatial .dashboard {
+/* Common app wrappers that often add a panel */
+html.is-spatial .landing,
+html.is-spatial .app,
+html.is-spatial .app-surface,
+html.is-spatial .dashboard,
+html.is-spatial .panel,
+html.is-spatial .content,
+html.is-spatial .page {
   background: transparent !important;
-  box-shadow: none;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+}
+
+/* If you have any full-bleed containers that set a white bg */
+html.is-spatial [class*="container"],
+html.is-spatial [class*="wrapper"],
+html.is-spatial [class*="surface"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* In dev, hide any error overlays that paint a sheet */
+#vite-plugin-checker-error-overlay,
+#vite-dev-server-overlay {
+  display: none !important;
+}
+
+html.is-spatial #root {
+  outline: 2px dashed magenta;
 }

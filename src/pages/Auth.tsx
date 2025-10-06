@@ -1,6 +1,7 @@
 // src/pages/Auth.tsx
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { IS_SPATIAL } from "../env"; // <-- add this
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -185,18 +186,24 @@ const wrap: React.CSSProperties = {
   display: "grid",
   placeItems: "center",
   padding: 24,
-  background:
-    "radial-gradient(120% 120% at 30% 20%, rgba(0,0,0,0.04), rgba(0,0,0,0.02))",
+  background: IS_SPATIAL
+    ? "transparent"
+    : "radial-gradient(120% 120% at 30% 20%, rgba(0,0,0,0.04), rgba(0,0,0,0.02))",
 };
+
 const card: React.CSSProperties = {
   width: "min(440px, 92vw)",
-  background: "rgba(255,255,255,0.9)",
-  backdropFilter: "blur(16px) saturate(140%)",
-  border: "1px solid rgba(0,0,0,0.08)",
+  background: IS_SPATIAL ? "transparent" : "rgba(255,255,255,0.9)",
+  // blur looks like a gray panel in spatial; disable it
+  backdropFilter: IS_SPATIAL ? undefined : "blur(16px) saturate(140%)",
+  border: IS_SPATIAL
+    ? "1px solid rgba(255,255,255,0.18)"
+    : "1px solid rgba(0,0,0,0.08)",
   borderRadius: 16,
-  boxShadow: "0 12px 36px rgba(0,0,0,0.16)",
+  boxShadow: IS_SPATIAL ? "none" : "0 12px 36px rgba(0,0,0,0.16)",
   padding: 20,
 };
+
 const label: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,

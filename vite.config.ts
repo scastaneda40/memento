@@ -1,30 +1,38 @@
 // vite.config.ts
-import { defineConfig, loadEnv, type ConfigEnv, type UserConfig } from "vite";
+import { defineConfig, loadEnv, type ConfigEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import webSpatial from "@webspatial/vite-plugin";
 import { createHtmlPlugin } from "vite-plugin-html";
-import basicSsl from "@vitejs/plugin-basic-ssl";
-import fs from "node:fs";
-import path from "node:path";
 
-export default defineConfig((configEnv: ConfigEnv): UserConfig => {
-  const env = loadEnv(configEnv.mode, process.cwd(), "");
-  const XR_ENV = env.VITE_XR_ENV || "web"; // "web" or "avp"
+export default defineConfig(({ mode }: ConfigEnv) => {
+  // Load .env files (prefers .env.local for local dev)
+  const env = loadEnv(mode ?? "", process.cwd(), "");
+
+  // Accept both Vercel XR_ENV and local VITE_XR_ENV
+  const raw = env.VITE_XR_ENV || process.env.XR_ENV || "web";
+  // Map "avp" -> "webspatial" (what your CSS/logic expects)
+  const XR_ENV = raw === "avp" ? "webspatial" : raw;
+
+  console.log("🚀 ~ mode:", mode);
+  console.log("🚀 ~ VITE_XR_ENV (normalized):", XR_ENV);
 
   return {
     plugins: [
+      basicSsl(),
       react(),
       webSpatial(),
-      basicSsl(),
       createHtmlPlugin({
-        inject: { data: { XR_ENV } },
+        inject: { data: { XR_ENV } }, // <- used by index.html
       }),
     ],
-
     define: {
-      __XR_ENV__: JSON.stringify(XR_ENV),
+      // handy for TS/JS runtime checks if you want
+      __XR_ENV__: JSON.stringify(env.VITE_XR_ENV ?? "web"),
     },
-
+    resolve: {
+      alias: [{ find: /^~\//, replacement: "/" }],
+    },
     server: {
       host: true,
       port: 5173,
@@ -34,16 +42,7 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
         Pragma: "no-cache",
         Expires: "0",
       },
-      https: {
-        cert: fs.readFileSync(path.resolve("cert/localhost+2.pem")),
-        key: fs.readFileSync(path.resolve("cert/localhost+2-key.pem")),
-      },
     },
-
-    // ✅ Fixed: use empty object instead of `true` for HTTPS
-    preview: {
-      https: {},
-      port: 5173,
-    },
+    build: { outDir: "dist" },
   };
 });

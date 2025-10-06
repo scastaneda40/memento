@@ -1,17 +1,26 @@
-// import "../src/spacial-flag";
-import React from "react";
-import ReactDOM from "react-dom/client";
+// src/main.tsx
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Importing ensures the WebSpatial runtime hooks in
-import "@webspatial/react-sdk";
+// ✅ import the actual exports from env.ts
+import { XR_RUNTIME, IS_SPATIAL, XR_ENV_BUILD } from "./env";
 
-import { XR_ENV, XR_ENV_BUILD } from "./env";
-console.log("[XR] runtime:", XR_ENV, "| build:", XR_ENV_BUILD);
+// Apply spatial class as early as possible (before render)
+document.documentElement.classList.toggle("is-spatial", IS_SPATIAL);
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+// Sanity logs
+console.log(
+  "[XR] runtime:",
+  XR_RUNTIME,
+  "| build:",
+  XR_ENV_BUILD,
+  "| isSpatial:",
+  IS_SPATIAL
 );
+
+const container = document.getElementById("root");
+if (!container) {
+  throw new Error("#root not found");
+}
+createRoot(container).render(<App />);

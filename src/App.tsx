@@ -7,6 +7,7 @@ import WallView from "./pages/WallView";
 import AuthView from "./pages/Auth";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { Wall } from "./types";
+import { XR_RUNTIME, IS_SPATIAL, XR_ENV_BUILD } from "./env";
 
 type Route = "landing" | "dashboard" | "wall" | "auth";
 
@@ -25,6 +26,22 @@ export default function App() {
     null
   );
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null); // null = booting
+
+  // in App.tsx (or main.tsx)
+  useEffect(() => {
+    // Apply or remove the CSS class so spatial styling kicks in
+    document.documentElement.classList.toggle("is-spatial", IS_SPATIAL);
+
+    // Log current runtime and build for sanity checks
+    console.log(
+      "[XR] runtime:",
+      XR_RUNTIME,
+      "| build:",
+      XR_ENV_BUILD,
+      "| isSpatial:",
+      IS_SPATIAL
+    );
+  }, []);
 
   // Simple hash router
   useEffect(() => {
