@@ -6,6 +6,7 @@ const isSpatial = XR === 'avp'; %>
   <head>
     <meta charset="UTF-8" />
     <meta name="xr-env" content="<%= XR %>" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <script>
       window.XR_ENV = "<%= XR %>";
       console.log("[INDEX] XR_ENV =", window.XR_ENV);
