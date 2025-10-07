@@ -1,7 +1,7 @@
 {
   "name": "Memento°",
   "short_name": "Memento",
-  "start_url": "/",
+  "start_url": "/webspatial/avp/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
