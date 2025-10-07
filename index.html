@@ -1,21 +1,16 @@
-<!DOCTYPE html>
-<% const XR = (typeof XR_ENV !== 'undefined' && XR_ENV) ? XR_ENV : 'web'; %> <%
-const isSpatial = XR === 'avp'; %>
-<html lang="en" <% if (isSpatial) { %>
-  class="is-spatial"<% } %>>
+<!-- index.html -->
+<!doctype html>
+<html lang="en" <%= XR_ENV === 'avp' ? 'class="is-spatial"' : '' %>>
   <head>
     <meta charset="UTF-8" />
-    <meta name="xr-env" content="<%= XR %>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <script>
-      window.XR_ENV = "<%= XR %>";
-      console.log("[INDEX] XR_ENV =", window.XR_ENV);
-    </script>
+
     <title>Memento°</title>
   </head>
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: prefix with the injected base -->
-    <script type="module" src="<%= HTML_BASE %>src/main.tsx"></script>
+    <!-- IMPORTANT: keep this as the real source path, no base prefix -->
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
