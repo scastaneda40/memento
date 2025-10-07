@@ -1,3 +1,7 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/webspatial/avp/" },
+    { "source": "/webspatial/avp", "destination": "/webspatial/avp/" }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
