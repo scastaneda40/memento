@@ -14,7 +14,11 @@ export default function Auth() {
   const [err, setErr] = useState<string | null>(null);
 
   // 👉 critical: send users back to the site root (no hash)
-  const REDIRECT_TO = `${window.location.origin}/auth/callback.html`;
+  // Works in dev & prod; typed out of the box
+  const REDIRECT_TO = new URL(
+    "auth/callback.html",
+    window.location.origin + import.meta.env.BASE_URL
+  ).toString();
 
   const handleSignIn = async () => {
     setBusy(true);

@@ -1,7 +1,20 @@
 {
   "redirects": [
     { "source": "/", "destination": "/webspatial/avp/" },
-    { "source": "/webspatial/avp", "destination": "/webspatial/avp/" }
+    { "source": "/webspatial/avp", "destination": "/webspatial/avp/" },
+    {
+      "source": "/auth/callback.html",
+      "destination": "/webspatial/avp/auth/callback.html"
+    }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/webspatial/avp/auth/callback.html",
+      "destination": "/webspatial/avp/auth/callback.html"
+    },
+    {
+      "source": "/webspatial/avp/(.*)",
+      "destination": "/webspatial/avp/index.html"
+    }
+  ]
 }
