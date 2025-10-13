@@ -1,124 +1,250 @@
-/* Container */
+/* ===============================
+   wall.css — glassy, transparent wall
+   =============================== */
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+/* RESET: make the container itself fully transparent */
+.wall-view,
+.wall-view.serene-sky,
+.wall-view.warm-canvas,
+.wall-view.dark-tribute {
+  background: transparent !important;
+}
+
+/* ---------- Wall container ---------- */
 .wall-view {
   position: relative;
+  isolation: isolate;
   min-height: 100vh;
   color: #0f172a;
-  overflow: hidden;
+  overflow: visible;
+
+  /* panel frame spacing so rounded corners are visible */
+  padding: 14px;
 }
 
-/* Use your preset backgrounds across the full view */
+/* The glassy blue “sheet” is drawn by ::before so the page behind
+      can show through while we tint it blue. */
+.wall-view::before {
+  /* the pseudo-element must exist + be positioned */
+  content: "";
+  position: absolute;
+  inset: 14px; /* sits inside the padded frame */
+  border-radius: 22px;
+  pointer-events: none;
+  z-index: -1;
+
+  /* glass + blue tint */
+  background: radial-gradient(
+      140% 120% at 18% 6%,
+      rgba(255, 255, 255, 0.18),
+      /* soft bloom */ rgba(255, 255, 255, 0) 45%
+    ),
+    var(
+      --wall-fill,
+      linear-gradient(
+        180deg,
+        rgba(109, 167, 219, 0.22),
+        rgba(58, 110, 170, 0.26)
+      )
+    );
+
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+
+  /* translucent frame + subtle inner highlight */
+  outline: 2px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 18px 48px rgba(0, 0, 0, 0.25);
+}
+
+/* A very soft top divider to ground content under the header area */
+.wall-view::after {
+  content: "";
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 74px; /* just under header */
+  overflow: visible;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Variant tints for each wall background (all translucent) */
 .wall-view.serene-sky {
-  background: linear-gradient(180deg, #cfe6ff 0%, #e9f1ff 100%);
+  --wall-fill: linear-gradient(
+    180deg,
+    rgba(156, 199, 247, 0.2),
+    /* was 0.28 */ rgba(61, 115, 177, 0.28) /* was 0.38 */
+  );
 }
 .wall-view.warm-canvas {
-  background: linear-gradient(180deg, #f6efe7 0%, #efe6db 100%);
+  --wall-fill: linear-gradient(
+    180deg,
+    rgba(240, 220, 198, 0.18),
+    rgba(209, 180, 149, 0.24)
+  );
 }
 .wall-view.dark-tribute {
-  background: radial-gradient(120% 120% at 30% 20%, #1e1e24, #0f0f14);
-  color: #e5e7eb;
+  --wall-fill: linear-gradient(
+    180deg,
+    rgba(32, 36, 48, 0.26),
+    /* was 0.40 */ rgba(12, 14, 22, 0.32) /* was 0.46 */
+  );
 }
 
-/* Header (frosted, sticky) */
+/* ---------- Header (sticky, glass, heavier frame) ---------- */
 .wall-header {
   position: sticky;
-  top: 0;
-  z-index: 10;
+  top: 12px; /* sits inside the framed sheet */
+  z-index: 2;
   display: grid;
-  grid-template-columns: 40px 1fr 40px; /* left | center | right */
+  grid-template-columns: 44px 1fr 44px; /* left | center | right */
   align-items: center;
-  padding: 16px 20px;
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  background: rgba(255, 255, 255, 0.22);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  margin: 0 24px; /* pulls in from the side frame */
+  padding: 10px 14px;
+  border-radius: 14px;
+
+  background: color-mix(in srgb, #ffffff 14%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+
+  /* make it pop a bit more while translucent */
+  outline: 2px solid rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 26px rgba(0, 0, 0, 0.22);
 }
+
 .dark-tribute .wall-header {
-  background: rgba(10, 10, 12, 0.35);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, #0b0f18 35%, transparent);
+  outline: 2px solid rgba(255, 255, 255, 0.22);
 }
 
 /* Title */
 .wall-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 800;
-  text-align: center; /* centers text in middle grid cell */
+  text-align: center;
+  color: #fff; /* requested: white title */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 /* Back button */
 .back-btn {
-  --size: 44px;
+  --size: 36px;
   display: grid;
   place-items: center;
   width: var(--size);
   height: var(--size);
-  padding: 0; /* don't rely on padding for centering */
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, #ffffff 18%, transparent);
+  outline: 1.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   cursor: pointer;
-  line-height: 1; /* kill baseline effects */
-  -webkit-font-smoothing: antialiased;
+  line-height: 1;
+  color: #253046;
 }
 .back-btn .icon {
   display: block;
-  font-size: 22px;
   line-height: 1;
-  /* tiny optical tweak if needed on visionOS: */
-  /* transform: translateY(0.5px); */
 }
-
 .dark-tribute .back-btn {
   color: #fff;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, #ffffff 10%, transparent);
 }
 
-/* Main area placeholder (so you can see depth) */
+/* ---------- Content area ---------- */
 .wall-main {
-  padding: 20px;
+  position: relative;
+  z-index: 1; /* above the glass sheet (::before) */
+  padding: 24px 28px 32px;
+  overflow: visible;
+  padding-top: 40px;
 }
 
-/* Floating Action Button (transparent circle with white “+”) */
+/* Empty state hint on the sheet */
+.empty-state {
+  position: relative;
+  margin: 8px 2px;
+  padding: 6px 10px;
+  display: inline-block;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(5px) saturate(130%);
+  backdrop-filter: blur(5px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Floating Action Button ---------- */
 .fab {
-  --size: 68px; /* pick your size */
-  position: fixed; /* or absolute inside wall */
-  right: 24px;
-  bottom: 24px;
+  --size: 62px;
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
   display: grid;
   place-items: center;
   width: var(--size);
   height: var(--size);
   padding: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+
+  background: color-mix(in srgb, #ffffff 16%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  outline: 2px solid rgba(255, 255, 255, 0.38);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+  color: #fff;
   cursor: pointer;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
 }
 .fab .icon {
   display: block;
-  font-size: 36px; /* scales independently of the circle */
   line-height: 1;
 }
-
-.back-btn,
-.fab {
-  will-change: transform;
-}
-
 .fab:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.16);
 }
 .fab:active {
   transform: translateY(0);
+}
+
+.wall-view::before {
+  inset: 14px;
+}
+
+/* ---------- Optional: tune for visionOS class ---------- */
+html.is-spatial .wall-view::before {
+  /* slightly stronger glass on visionOS for depth */
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  outline-color: rgba(255, 255, 255, 0.32);
+  overflow: visible;
+}
+
+html.is-spatial .wall-header {
+  outline-color: rgba(255, 255, 255, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.26);
+}
+
+.wall-main {
+  overflow: visible;
 }

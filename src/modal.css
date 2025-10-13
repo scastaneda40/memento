@@ -1,165 +1,192 @@
-/* overlay */
+/* =========================================
+   modal.css — Web (default) + Spatial overrides
+   ========================================= */
+
+/* ------- Tokens ------- */
+:root {
+  --brand: #6d28d9;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --ring-web: rgba(0, 0, 0, 0.12);
+}
+
+/* ------- Overlay ------- */
 .mdl-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 10000; /* above header/rails */
+  isolation: isolate; /* own stacking context */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.46); /* a touch darker to hide lines behind */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
-/* panel (glass) */
+/* ------- Panel ------- */
 .mdl-panel {
   width: min(720px, 92vw);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.86);
+  background-clip: padding-box; /* keeps blur + border inside the radius */
+  -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
   overflow: hidden;
+  color: var(--ink);
 }
 
-/* header/footer/body */
+/* ------- Sections ------- */
 .mdl-header,
 .mdl-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .mdl-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 .mdl-body {
   padding: 20px 24px;
 }
 .mdl-title {
-  font: 600 20px/1.2 system-ui, sans-serif;
-  color: #0f172a;
+  font: 600 20px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--ink);
 }
 
-/* inputs */
+/* ------- Inputs ------- */
 .mdl-label {
-  font: 500 13px/1 system-ui, sans-serif;
-  color: #64748b;
+  font: 500 13px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--muted);
 }
 .mdl-input {
   margin-top: 6px;
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--ring-web);
+  background: rgba(255, 255, 255, 0.9);
   padding: 10px 12px;
   outline: none;
+  color: var(--ink);
 }
 .mdl-input:focus {
-  box-shadow: 0 0 0 2px rgba(109, 40, 217, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent);
 }
 
-/* background chooser */
+/* ------- Background chooser ------- */
 .mdl-choices {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 .mdl-choice {
-  display: flex;
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--ring-web);
+  background: rgba(255, 255, 255, 0.75);
   padding: 12px;
   text-align: left;
-  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.2s,
+    border-color 0.2s;
 }
 .mdl-choice:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
 }
 .mdl-choice--sel {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 18%, transparent) inset;
 }
 
 .mdl-thumb {
-  width: 80px;
-  height: 56px;
+  width: 100%;
+  height: 64px;
   border-radius: 10px;
   overflow: hidden;
 }
 .mdl-name {
-  font: 600 14px/1.2 system-ui, sans-serif;
-  color: #0f172a;
+  font: 600 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--ink);
 }
 .mdl-desc {
-  font: 12px/1.2 system-ui, sans-serif;
-  color: #64748b;
+  font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--muted);
 }
 
-/* radio dot */
+/* ------- Radio ------- */
 .mdl-radio {
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(0, 0, 0, 0.28);
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.8);
 }
 .mdl-radio--sel {
-  border-color: #7c3aed;
-  background: #7c3aed;
-}
-.mdl-radio--sel::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #fff;
+  border-color: var(--brand);
+  box-shadow: inset 0 0 0 6px var(--brand);
 }
 
-/* buttons */
+/* ------- Buttons ------- */
 .btn {
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f1f5f9; /* light gray */
+  border: 1px solid var(--ring-web);
+  color: #111827; /* darker so “Cancel” is readable */
 }
 .btn-ghost:hover {
-  background: #fff;
+  background: #ffffff;
+}
+.mdl-header .btn-ghost {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 12px;
 }
 .btn-primary {
-  background: #6d28d9;
+  background: var(--brand);
   color: #fff;
+  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.25);
 }
 .btn-primary:hover {
   background: #5b21b6;
 }
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: default;
+  box-shadow: none;
 }
 
+/* ------- Avatar preview (optional) ------- */
 .avatar-preview {
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--ring-web);
+  background: rgba(255, 255, 255, 0.85);
   overflow: hidden;
   display: grid;
   place-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) inset;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 .avatar-preview img {
   width: 100%;
@@ -170,4 +197,122 @@
   font-size: 20px;
   opacity: 0.7;
   line-height: 1;
+}
+
+/* ------- Swatch thumbs (CreateWallModal) ------- */
+.mdl-thumb.serene-sky {
+  background: radial-gradient(
+    120% 120% at 20% 10%,
+    #cfe8ff 0%,
+    #8ab6e6 40%,
+    #5e86b0 85%
+  );
+}
+.mdl-thumb.warm-canvas {
+  background: linear-gradient(135deg, #f7efe6 0%, #ead9c6 45%, #d2b89d 100%);
+}
+.mdl-thumb.dark-tribute {
+  background: linear-gradient(160deg, #0f172a 0%, #111827 45%, #0b1220 100%);
+}
+
+/* =========================================
+   SPATIAL (VisionOS) OVERRIDES
+   ========================================= */
+html.is-spatial .mdl-overlay {
+  background: rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html.is-spatial .mdl-panel {
+  --xr-background-material: thick;
+  background: color-mix(in srgb, #ffffff 10%, transparent);
+  color: rgba(255, 255, 255, 0.94);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.32);
+}
+
+html.is-spatial .mdl-header,
+html.is-spatial .mdl-footer {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+html.is-spatial .mdl-title {
+  color: rgba(255, 255, 255, 0.98);
+}
+html.is-spatial .mdl-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html.is-spatial .mdl-input {
+  background: color-mix(in srgb, #ffffff 12%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.96);
+}
+html.is-spatial .mdl-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+html.is-spatial .mdl-input:focus {
+  box-shadow: 0 0 0 2px rgba(198, 167, 255, 0.35);
+}
+
+html.is-spatial .mdl-choice {
+  background: color-mix(in srgb, #ffffff 10%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+html.is-spatial .mdl-choice--sel {
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) inset;
+}
+html.is-spatial .mdl-name {
+  color: rgba(255, 255, 255, 0.98);
+}
+html.is-spatial .mdl-desc {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+html.is-spatial .mdl-radio {
+  background: color-mix(in srgb, #ffffff 18%, transparent);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+html.is-spatial .mdl-radio--sel {
+  border-color: #c6a7ff;
+  box-shadow: inset 0 0 0 6px var(--brand);
+}
+
+/* ghost buttons must stay readable in glass */
+html.is-spatial .btn-ghost {
+  background: color-mix(in srgb, #ffffff 18%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: rgba(255, 255, 255, 0.92);
+}
+html.is-spatial .btn-ghost:hover {
+  background: color-mix(in srgb, #ffffff 26%, transparent);
+}
+
+/* keep primary solid for contrast in space */
+html.is-spatial .btn-primary {
+  --xr-background-material: none;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(109, 40, 217, 0.32);
+}
+
+/* brighten thumbs slightly for glass */
+html.is-spatial .mdl-thumb.serene-sky {
+  background: radial-gradient(
+    120% 120% at 20% 10%,
+    #d8ecff 0%,
+    #9ac6f2 40%,
+    #5f89b2 85%
+  );
+}
+html.is-spatial .mdl-thumb.warm-canvas {
+  background: linear-gradient(135deg, #fbf4ea 0%, #eddcc8 45%, #d8bfa3 100%);
+}
+html.is-spatial .mdl-thumb.dark-tribute {
+  background: linear-gradient(160deg, #0f172a 0%, #0e1a2b 45%, #0b1220 100%);
 }

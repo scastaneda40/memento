@@ -1,469 +1,522 @@
+/* =========================================
+   Dashboard styles (web + spatial)
+   ========================================= */
+
 :root {
-  --ink: #0f172a;
-  --muted: #64748b;
-  --violet: #6d28d9;
-  --violet-600: #5b21b6;
-  --ring: rgba(15, 23, 42, 0.06);
+  --ink: rgba(17, 24, 39, 0.92);
+  --muted: rgba(17, 24, 39, 0.6);
+  --ring-web: rgba(0, 0, 0, 0.08);
 }
 
-/* Page */
 .dashboard {
   min-height: 100vh;
-  background-color: transparent;
-  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
 }
 
-/* Header */
+.dashboard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard::before {
+  pointer-events: none; /* never eats clicks */
+  background: transparent; /* keep it see-through */
+  outline: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    /* inner hairline */ 0 18px 60px rgba(0, 0, 0, 0.25); /* soft lift */
+  z-index: 0; /* sits under children */
+}
+
 .dash-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 16px 24px;
+  gap: 12px;
+  padding: 12px 16px;
 }
-
 .dash-header .brand {
-  flex: 1;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.2px;
 }
-.dash-header .center-actions,
-.dash-header .right-actions {
-  flex: 1;
-  display: flex;
-  align-items: center; /* fixes tall stretch */
-}
-.dash-header .center-actions {
-  justify-content: center;
+
+.center-actions,
+.right-actions {
+  display: inline-flex;
   gap: 10px;
-}
-.dash-header .right-actions {
   justify-content: flex-end;
-}
-
-.brand {
-  font-weight: 700;
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* Right-side actions */
-.dash-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 10px;
   align-items: center;
 }
 
-/* Buttons */
-.primary-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px; /* consistent height */
-  padding: 0 18px;
-  border-radius: 12px;
-  background: var(--violet);
-  color: #fff;
-  font-weight: 600;
-  border: 0;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
-  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.25);
-}
-
-.dash-actions .primary-btn {
-  min-width: 160px; /* pick the size you like (200–240 works well) */
-  height: 40px; /* identical height */
-  justify-content: center;
-  gap: 10px; /* nice spacing between icon and text */
-  padding: 0 18px; /* padding is now mostly for horizontal breathing room */
-}
-
-.dash-actions .primary-btn .btn-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.primary-btn:hover {
-  background: var(--violet-600);
-  transform: translateY(-1px);
-}
-
-.primary-btn .btn-icon {
-  width: 18px;
-  height: 18px;
-  display: block; /* no baseline weirdness */
-  flex-shrink: 0;
-}
-
-/* Main */
 .dash-main {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 24px;
+  padding: 16px;
 }
 
-/* --- Title / chooser --- */
+.title {
+  color: #fff !important;
+  font-size: 20px;
+  font-weight: 800;
+}
+
 .title-row {
-  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 4px 16px;
 }
 
 .title-group {
-  display: flex;
-  align-items: center; /* keep count on same baseline as title */
-  gap: 10px;
-  position: relative; /* anchor the dropdown menu */
-}
-
-.title-group .title {
-  margin: 0;
-  line-height: 1.1;
-  font-weight: 800;
-  font-size: clamp(22px, 3vw, 38px);
-  color: #0b1324;
-  padding-bottom: 2px;
-}
-
-.title-group .meta-count {
-  line-height: 1;
-  font-size: clamp(14px, 1.6vw, 24px);
-  color: var(--muted);
-  font-weight: 500;
-  transform: none;
-}
-
-.avatar-wrap {
   display: inline-flex;
-  align-self: center;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
-.title-avatar {
-  width: clamp(32px, 5vw, 56px);
-  height: clamp(32px, 5vw, 56px);
-  border-radius: 999px;
-  object-fit: cover;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+.meta-count {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
-/* Chevron button — supports .title-chooser or .title-picker-btn */
-.title-chooser,
+.title-picker {
+  position: relative;
+}
 .title-picker-btn {
   display: inline-grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px; /* square-ish corners */
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 6px 18px rgba(0, 0, 0, 0.12);
-  color: #0f172a;
-  cursor: pointer;
-  margin-left: 8px;
-
-  /* move the whole button up a touch */
-  align-self: center;
-  margin-top: 0;
-
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-.title-chooser:hover,
-.title-picker-btn:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.9) inset,
-    0 10px 24px rgba(0, 0, 0, 0.16);
-}
-.title-chooser:active,
-.title-picker-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* Chevron rotation */
-.title-chooser .chev,
-.title-picker-btn svg {
-  transition: transform 0.18s ease;
-}
-.title-chooser.is-open .chev,
-.title-picker-btn[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-
-/* Reset the button so its content centers identically on WebSpatial/visionOS */
-.title-picker-btn {
-  display: flex; /* more predictable than grid for inline SVG */
-  align-items: center;
-  justify-content: center;
-  padding: 0; /* no padding shifting the icon */
-  line-height: 1; /* kill baseline alignment */
-  vertical-align: middle;
-  -webkit-appearance: none; /* iOS/visionOS quirks */
-  appearance: none;
-}
-
-/* Make the SVG ignore baselines and center perfectly */
-.title-picker-btn > svg {
-  display: block; /* opt out of baseline */
-  width: 18px;
-  height: 18px;
-  margin: 0; /* no stray spacing */
-  pointer-events: none; /* clicks hit the button, not the path */
-  transform: translateY(0); /* neutral; keeps your rotate(180deg) working */
-}
-
-/* If the simulator still renders 1px low, give it a tiny platform-safe nudge */
-@supports (-webkit-touch-callout: none) {
-  .title-picker-btn > svg {
-    transform: translateY(0.5px);
-  }
-}
-
-/* Dropdown menu — supports .profile-menu or .title-menu */
-.profile-menu,
-.title-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0; /* left-align under the title */
-  min-width: 320px;
-  max-width: min(420px, 90vw);
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: 50;
-}
-
-.profile-menu .menu-item,
-.title-menu .menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
+  border: 1px solid var(--ring-web);
+  background: #fff;
+  cursor: pointer;
+}
+
+/* Base menu look */
+.title-menu {
+  background: #fff;
+  border: 1px solid var(--ring-web);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.title-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
   border: 0;
   background: transparent;
   cursor: pointer;
-  text-align: left;
-  color: #0f172a;
-  font-weight: 600;
 }
-.profile-menu .menu-item:hover,
-.title-menu .menu-item:hover {
-  background: rgba(0, 0, 0, 0.04);
+.title-menu-item:hover {
+  background: rgba(17, 24, 39, 0.06);
 }
-
-.profile-menu .menu-sep,
-.title-menu .menu-sep {
+.title-menu-item.is-active {
+  background: rgba(17, 24, 39, 0.08);
+  font-weight: 700;
+}
+.title-menu-sep {
   height: 1px;
-  margin: 8px 6px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 1px;
+  background: rgba(17, 24, 39, 0.08);
+  margin: 6px 2px;
 }
-.profile-menu .menu-empty,
-.title-menu .menu-empty {
-  color: var(--muted);
-  padding: 8px 12px;
-  font-weight: 500;
+.title-menu-empty {
+  padding: 8px 10px;
+  color: rgba(17, 24, 39, 0.6);
 }
 
-/* Avatars inside menu */
-.menu-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  overflow: hidden;
+/* ---------- Cards ---------- */
+.card-grid {
   display: grid;
-  place-items: center;
-  background: #eef2ff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
-.menu-avatar img {
+.card {
+  background: #fff;
+  border: 1px solid var(--ring-web);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 0; /* keep below top-layer dialog */
+}
+.card--click:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* Thumb/media */
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: inherit;
+  overflow: hidden;
+  background: rgba(17, 24, 39, 0.04);
+}
+.thumb-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.menu-avatar-fallback {
-  font-size: 16px;
-}
-
-/* Cards grid */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 24px;
-}
-@media (min-width: 768px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 1024px) {
-  .card-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Card */
-.card {
-  background: rgba(255, 255, 255, 0.14);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  will-change: transform;
-  --xr-background-material: translucent;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-}
-.card--click {
-  cursor: pointer;
-}
-.card--click:active {
-  transform: translateY(0);
-}
-
-.thumb {
-  position: relative;
-  overflow: hidden;
-  height: 160px;
+  border-radius: inherit;
+  z-index: 0;
 }
 .thumb > .serene-sky,
 .thumb > .warm-canvas,
 .thumb > .dark-tribute {
-  width: 100%;
-  height: 100%;
   position: absolute;
-  top: 0;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+}
+.thumb::before {
+  content: "";
+  position: absolute;
   left: 0;
+  right: 0;
+  top: 0;
+  height: 42%;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.28),
+    rgba(0, 0, 0, 0.08) 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
-.thumb-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Preset backgrounds */
-.serene-sky {
-  background: linear-gradient(180deg, #cfe6ff, #e9f1ff);
-}
-.warm-canvas {
-  background: linear-gradient(180deg, #f6efe7, #efe6db);
-}
-.dark-tribute {
-  background: radial-gradient(120% 120% at 30% 20%, #1e1e24, #0f0f14);
-}
-
-.badge {
+.thumb .empty-text {
   position: absolute;
   top: 10px;
-  right: 10px;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.22);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  backdrop-filter: blur(10px) saturate(130%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #0f172a;
-  font-size: 12px;
+  left: 12px;
   padding: 6px 10px;
-  border-radius: 999px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  pointer-events: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px) saturate(130%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+  z-index: 2;
 }
-
-.card.outline {
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border: 1.5px solid rgba(200, 200, 200, 0.65);
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.15);
+.badge {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  z-index: 2;
 }
 
 .card-body {
-  padding: 14px 16px 18px;
+  padding: 12px 14px 14px;
 }
 .card-title {
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-weight: 700;
+  color: var(--ink);
 }
 .card-sub {
+  font-size: 13px;
   color: var(--muted);
-  font-size: 14px;
+}
+.card-title,
+.card-sub {
+  color: #fff !important;
 }
 
-/* --- Dropdown button reset (fixes grey borders) --- */
-.title-menu button,
-.profile-menu button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: inherit;
+/* Swatches */
+.serene-sky {
+  background: radial-gradient(
+    120% 120% at 20% 10%,
+    #cfe8ff 0%,
+    #8ab6e6 40%,
+    #5e86b0 85%
+  );
+}
+.warm-canvas {
+  background: linear-gradient(135deg, #f7efe6 0%, #ead9c6 45%, #d2b89d 100%);
+}
+.dark-tribute {
+  background: linear-gradient(160deg, #0f172a 0%, #111827 45%, #0b1220 100%);
 }
 
-/* --- Support BOTH naming schemes (.menu-* and .title-menu-*) --- */
-.profile-menu .menu-item,
-.title-menu .menu-item,
-.profile-menu .title-menu-item,
-.title-menu .title-menu-item {
-  width: 100%;
-  display: flex;
+/* Buttons */
+.primary-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  text-align: left;
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.profile-menu .menu-item:hover,
-.title-menu .menu-item:hover,
-.profile-menu .title-menu-item:hover,
-.title-menu .title-menu-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.profile-menu .menu-sep,
-.title-menu .menu-sep,
-.profile-menu .title-menu-sep,
-.title-menu .title-menu-sep {
-  height: 1px;
-  margin: 8px 6px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 1px;
-}
-
-.profile-menu .menu-empty,
-.title-menu .menu-empty,
-.profile-menu .title-menu-empty,
-.title-menu .title-menu-empty {
-  color: var(--muted);
+  gap: 8px;
+  background: #6d28d9;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
   padding: 8px 12px;
-  font-weight: 500;
+  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.25);
+  cursor: pointer;
+}
+.primary-btn .btn-icon {
+  width: 18px;
+  height: 18px;
 }
 
-/* Active row highlight (when current profile is selected) */
-.title-menu .is-active,
-.profile-menu .is-active {
-  background: rgba(109, 40, 217, 0.12);
+/* Empty */
+.empty {
+  border: 1px dashed var(--ring-web);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(17, 24, 39, 0.02);
 }
 
-/* Keep the square chevron rotation working with aria-expanded */
-.title-picker-btn svg {
-  transition: transform 0.18s ease;
+/* =========================================
+     SPATIAL (VisionOS) OVERRIDES
+     ========================================= */
+
+html.is-spatial {
+  --ink: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --ring: rgba(255, 255, 255, 0.18);
+  --ring-strong: rgba(255, 255, 255, 0.28);
 }
-.title-picker-btn[aria-expanded="true"] svg {
-  transform: rotate(180deg);
+
+html.is-spatial .dashboard,
+html.is-spatial .dash-main {
+  background: transparent !important;
+  --xr-background-material: none;
+  color: var(--ink);
+}
+
+/* Header ribbon */
+html.is-spatial .dash-header {
+  position: relative;
+  padding: 10px 16px;
+  margin: 6px 8px;
+  border-radius: 18px;
+  border: none;
+}
+html.is-spatial .dash-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  --xr-background-material: translucent;
+  background: color-mix(in srgb, #000 10%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  outline: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 0;
+}
+html.is-spatial .dash-header::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -2px;
+  height: 2px;
+  opacity: 0.65;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
+  z-index: 0;
+}
+html.is-spatial .dash-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Title sizing */
+html.is-spatial .title-row .title-group {
+  align-items: flex-end;
+  gap: 8px;
+}
+html.is-spatial .title {
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+html.is-spatial .meta-count {
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.88;
+  margin-left: 8px;
+  transform: translateY(-2px);
+}
+
+html.is-spatial .title-picker-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, #fff 10%, transparent);
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+html.is-spatial .title-picker-btn svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  pointer-events: none;
+  fill: #fff !important;
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+/* Cards (glass) */
+html.is-spatial .card {
+  --xr-background-material: thick;
+  background: color-mix(in srgb, #fff 10%, transparent);
+  outline: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+  box-shadow: none;
+  overflow: hidden;
+  position: relative;
+  z-index: 0; /* stay below top layer */
+}
+html.is-spatial .card--click:hover {
+  outline-color: var(--ring-strong);
+  transform: translateZ(3px) scale(1.02);
+}
+
+html.is-spatial .thumb {
+  background: color-mix(in srgb, #fff 6%, transparent);
+  border-radius: inherit;
+  overflow: hidden;
+}
+html.is-spatial .thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+html.is-spatial .card-title {
+  color: rgba(255, 255, 255, 0.95);
+}
+html.is-spatial .card-sub {
+  color: var(--muted);
+}
+
+html.is-spatial .empty {
+  color: var(--muted);
+  border: 2px dashed var(--ring);
+  border-radius: 16px;
+  padding: 24px;
+  background: transparent;
+}
+
+html.is-spatial .primary-btn {
+  --xr-background-material: none;
+  background: #6d28d9;
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.28);
+}
+html.is-spatial .primary-btn:hover {
+  filter: brightness(1.07);
+  transform: translateZ(1px) scale(1.02);
+}
+html.is-spatial .primary-btn:active {
+  transform: translateZ(0) scale(0.98);
+}
+
+html.is-spatial .serene-sky {
+  background: radial-gradient(
+    120% 120% at 20% 10%,
+    #d8ecff 0%,
+    #9ac6f2 40%,
+    #5f89b2 85%
+  );
+}
+html.is-spatial .warm-canvas {
+  background: linear-gradient(135deg, #fbf4ea 0%, #eddcc8 45%, #d8bfa3 100%);
+}
+html.is-spatial .dark-tribute {
+  background: linear-gradient(160deg, #0f172a 0%, #0e1a2b 45%, #0b1220 100%);
+}
+
+/* =========================================
+     <dialog> in Top Layer — kill backdrop & centering
+     ========================================= */
+dialog.title-menu--dialog::backdrop {
+  background: transparent !important; /* removes page-dimming overlay */
+}
+dialog.title-menu--dialog {
+  margin: 0 !important;
+  padding: 0;
+  border: none;
+  max-width: none;
+  inset: auto auto auto auto; /* ignore UA centering */
+}
+dialog.title-menu--dialog[open] {
+  position: fixed !important; /* we control geometry inline */
+  pointer-events: auto;
+}
+
+/* Optional: during open, disable a couple of glass filters to avoid flicker */
+html.menu-open .dash-header::before,
+html.menu-open .thumb .empty-text {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html.is-spatial .dashboard::before {
+  outline: 2.5px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.32),
+    inset 0 0 0 1.2px rgba(255, 255, 255, 0.1);
+}
+
+/* Small icon button for overflow */
+/* Small icon button for overflow */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0; /* NEW */
+  line-height: 0; /* NEW: avoid vertical drift */
+  border-radius: 10px;
+  border: 1px solid var(--ring-web, rgba(0, 0, 0, 0.1));
+  background: color-mix(in srgb, #fff 85%, transparent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.icon-btn svg {
+  /* NEW: truly center the icon box */
+  display: block;
+}
+
+/* menu (unchanged) */
+.account-menu {
+  min-width: 220px;
+  padding: 6px;
+}
+.title-menu-item.danger,
+.danger-row .title-menu-item {
+  color: #b91c1c;
+}
+.title-menu-item.danger:hover {
+  background: rgba(220, 38, 38, 0.08);
 }

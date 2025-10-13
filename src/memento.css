@@ -10,10 +10,49 @@
   user-select: none;
   touch-action: none;
   cursor: grab;
-  transform: rotate(var(--base-rot, 0deg));
+  transform: rotate(var(--base-rot, 0deg)) translateZ(0);
   transform-origin: center center;
-  z-index: var(--card-z, auto);
+  backface-visibility: hidden;
+  z-index: var(--card-z, 5);
 }
+
+.float-wrap {
+  will-change: transform, filter;
+  animation: floatY var(--float-dur, 7s) var(--float-delay, 0s) ease-in-out
+      infinite,
+    breatheShadow calc(var(--float-dur, 7s) * 0.9) var(--float-delay, 0s)
+      ease-in-out infinite;
+}
+
+.float-wrap {
+  will-change: transform, filter;
+  animation: floatY var(--float-dur, 7s) var(--float-delay, 0s) ease-in-out
+      infinite,
+    breatheShadow calc(var(--float-dur, 7s) * 0.9) var(--float-delay, 0s)
+      ease-in-out infinite;
+}
+
+/* Float without extra rotation */
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0) translateZ(0);
+  }
+  50% {
+    transform: translateY(-6px) translateZ(0);
+  }
+}
+
+@keyframes breatheShadow {
+  0%,
+  100% {
+    filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.18));
+  }
+  50% {
+    filter: drop-shadow(0 14px 38px rgba(0, 0, 0, 0.22));
+  }
+}
+
 .memento-card:active {
   cursor: grabbing;
 }
@@ -26,14 +65,12 @@
 
 /* Subtle float/shine */
 @keyframes floatY {
-  0% {
-    transform: translateY(0) rotate(var(--base-rot, 0deg));
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--base-rot, 0deg)) translateZ(0);
   }
   50% {
-    transform: translateY(-6px) rotate(calc(var(--base-rot, 0deg) + 0.3deg));
-  }
-  100% {
-    transform: translateY(0) rotate(var(--base-rot, 0deg));
+    transform: translateY(-6px) rotate(var(--base-rot, 0deg)) translateZ(0);
   }
 }
 @keyframes breatheShadow {
@@ -55,9 +92,8 @@
 
 /* Hover lift (desktop) */
 @media (hover: hover) {
-  .memento-card:hover {
-    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.24));
-    transform: translateY(-1px) rotate(var(--base-rot, 0deg));
+  .memento-card:hover .float-wrap {
+    transform: translateY(-1px);
     animation-play-state: paused;
   }
 }
@@ -74,6 +110,7 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 .polaroid-photo,
 .polaroid-video {
@@ -82,6 +119,8 @@
   height: auto;
   aspect-ratio: 16/9;
   background: #000;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 /* DRAG SAFETY */
@@ -143,6 +182,13 @@
   background: rgba(255, 255, 255, 0.86);
   color: #111;
   pointer-events: none;
+}
+
+.polaroid-media,
+.ratio-16x9 {
+  /* if you use the ratio wrapper */
+  border-radius: 12px; /* or calc(var(--radius) - 6px) */
+  overflow: hidden; /* <- actually clips the video corners */
 }
 
 .ratio-16x9 {
@@ -392,4 +438,17 @@
 /* subtle hover feedback on the bubble */
 .memento-card .rz-corner:hover {
   transform: scale(1.06);
+}
+
+.memento-card {
+  z-index: var(--card-z, 10);
+}
+.memento-card:hover,
+.memento-card.is-dragging,
+.memento-card.is-resizing {
+  z-index: 999; /* float above neighbors while active */
+}
+
+.memento-card {
+  --base-rot: 0deg;
 }

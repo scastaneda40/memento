@@ -101,7 +101,7 @@ html.is-spatial #root {
 }
 
 /* Ensure app wrappers don’t repaint */
-html.is-spatial .landing,
+/* html.is-spatial .landing,
 html.is-spatial .app,
 html.is-spatial .app-surface,
 html.is-spatial .dashboard,
@@ -121,7 +121,7 @@ html.is-spatial [class*="surface"] {
   backdrop-filter: none !important;
   box-shadow: none !important;
   border: none !important;
-}
+} */
 
 /* Remove pseudo-element decorations */
 html.is-spatial .dashboard::before,
@@ -160,19 +160,19 @@ html.is-spatial #root {
 }
 
 /* Let your main surface be transparent … */
-html.is-spatial .dashboard {
+/* html.is-spatial .dashboard {
   background: transparent !important;
-}
+} */
 
 /* …but give cards a material so they’re visible in space */
-html.is-spatial .card {
+/* html.is-spatial .card {
   --xr-background-material: translucent;
   background: rgba(255, 255, 255, 0.14);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
-}
+} */
 
 /* Hide Vite overlays in dev */
 #vite-plugin-checker-error-overlay,

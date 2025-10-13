@@ -5,7 +5,8 @@ import type { Wall, Profile } from "../types";
 import CreateWallModal from "../components/CreateWallModal";
 import CreateProfileModal from "../components/CreateProfileModal";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { IS_SPATIAL } from "../env"; // <-- import spatial flag
+import AccountMenu from "../components/AccountMenu";
+import { IS_SPATIAL } from "../env";
 import "../webspatial.css";
 import "../dashboard.css";
 
@@ -20,24 +21,20 @@ const spatialClear: React.CSSProperties = {
 export default function Dashboard({
   goHome,
   onOpenWall,
-  selectedProfileId, // controlled selection from App
-  onSelectProfile, // setter from App
+  selectedProfileId,
+  onSelectProfile,
 }: {
   goHome: () => void;
   onOpenWall: (w: Wall) => void;
   selectedProfileId: string | null;
   onSelectProfile: (id: string | null) => void;
 }) {
-  console.log("[Dashboard] component rendering");
-
   const [openWall, setOpenWall] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
 
-  // Auth user id
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // Local Profile object for avatar/name; ID is the source of truth
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   const [walls, setWalls] = useState<Wall[]>([]);
@@ -45,30 +42,119 @@ export default function Dashboard({
   const [countMap, setCountMap] = useState<Record<string, number>>({});
   const [profiles, setProfiles] = useState<Profile[]>([]);
 
-  // dropdown state/refs
+  // ---- Profile menu (dialog in Top Layer)
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [menuPos, setMenuPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  }>({
+    top: 0,
+    left: 0,
+    width: 220,
+  });
 
-  // ---- Auth: read user id for queries (no redirects here)
+  const positionMenu = useCallback(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setMenuPos({
+      top: Math.round(r.bottom + 8),
+      left: Math.round(r.left),
+      width: Math.max(220, Math.round(r.width)),
+    });
+  }, []);
+
+  // Open/close dialog and immediately force geometry after show()
+  useEffect(() => {
+    const dlg = dialogRef.current;
+    if (!dlg) return;
+
+    if (menuOpen) {
+      if (!dlg.open) dlg.show(); // <-- non-modal (was showModal)
+      dlg.style.position = "fixed";
+      dlg.style.margin = "0";
+      (dlg.style as any).inset = "auto";
+      dlg.style.top = `${menuPos.top}px`;
+      dlg.style.left = `${menuPos.left}px`;
+      dlg.style.minWidth = `${menuPos.width}px`;
+      dlg.style.zIndex = "9999";
+      document.documentElement.classList.add("menu-open");
+    } else if (dlg.open) {
+      dlg.close();
+      document.documentElement.classList.remove("menu-open");
+    }
+  }, [menuOpen, menuPos]);
+
+  // Keep positioned on scroll/resize while open
+  useEffect(() => {
+    if (!menuOpen) return;
+    const sync = () => {
+      positionMenu();
+      const dlg = dialogRef.current;
+      if (!dlg) return;
+      dlg.style.top = `${menuPos.top}px`;
+      dlg.style.left = `${menuPos.left}px`;
+      dlg.style.minWidth = `${menuPos.width}px`;
+    };
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    return () => {
+      window.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [menuOpen, menuPos, positionMenu]);
+
+  // Close on outside click (capture) / Esc
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onDocDown = (e: PointerEvent) => {
+      const t = e.target as Node | null;
+      if (!t) return;
+      if (dialogRef.current?.contains(t)) return;
+      if (buttonRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    // capture phase ensures we always get the outside click
+    document.addEventListener("pointerdown", onDocDown, true);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDocDown, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  // Prevent dialog internal clicks from bubbling to the document listener
+  useEffect(() => {
+    const dlg = dialogRef.current;
+    if (!dlg) return;
+    const handler = (e: MouseEvent) => e.stopPropagation();
+    dlg.addEventListener("click", handler);
+    return () => dlg.removeEventListener("click", handler);
+  }, []);
+
+  // ---- Auth
   useEffect(() => {
     let ignore = false;
-
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       if (!ignore) {
-        const uid = data.user?.id ?? null;
-        setUserId(uid);
+        setUserId(data.user?.id ?? null);
         setAuthReady(true);
       }
     };
-
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => {
         setUserId(session?.user?.id ?? null);
       }
     );
-
     void init();
     return () => {
       ignore = true;
@@ -76,7 +162,7 @@ export default function Dashboard({
     };
   }, []);
 
-  // ---- Load profiles for this user
+  // ---- Load profiles
   useEffect(() => {
     if (!authReady || !userId) return;
     (async () => {
@@ -90,7 +176,7 @@ export default function Dashboard({
     })();
   }, [authReady, userId]);
 
-  // ---- Keep local Profile object in sync with the controlled ID
+  // ---- Sync selectedProfile object with id
   useEffect(() => {
     if (!profiles.length || !selectedProfileId) {
       setSelectedProfile(null);
@@ -100,16 +186,13 @@ export default function Dashboard({
     setSelectedProfile(found);
   }, [profiles, selectedProfileId]);
 
-  // ---- Walls loader (filter by profile id OR unassigned) — owned by user
+  // ---- Load walls
   const loadWalls = useCallback(
     async (profileId: string | null) => {
-      console.log("[loadWalls] profileId:", profileId, "userId:", userId);
-
       if (!userId) {
         setWalls([]);
         return;
       }
-
       let query = supabase
         .from("walls")
         .select("*")
@@ -131,13 +214,12 @@ export default function Dashboard({
     [userId]
   );
 
-  // Load walls when auth/profile changes
   useEffect(() => {
     if (!authReady || userId === null) return;
     loadWalls(selectedProfileId ?? null);
   }, [authReady, userId, selectedProfileId, loadWalls]);
 
-  // Build covers + counts per wall
+  // ---- Covers + counts
   useEffect(() => {
     (async () => {
       if (!walls.length) {
@@ -157,7 +239,6 @@ export default function Dashboard({
         setCountMap({});
         return;
       }
-
       const covers: Record<string, string> = {};
       const counts: Record<string, number> = {};
       for (const mm of (mms ?? []) as any[]) {
@@ -174,29 +255,7 @@ export default function Dashboard({
     })();
   }, [walls]);
 
-  // --- dropdown behavior: outside click + Escape
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const onDocClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (menuRef.current?.contains(target)) return;
-      if (buttonRef.current?.contains(target)) return;
-      setMenuOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
-
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
-
-  // Selections (notify parent right away)
+  // Profile picker helpers
   const selectUnassigned = () => {
     onSelectProfile(null);
     setMenuOpen(false);
@@ -207,12 +266,10 @@ export default function Dashboard({
     setSelectedProfile(p);
   };
 
-  // Title derived from selectedProfile (fallback if not resolved yet)
   const titleText = selectedProfileId
     ? `${selectedProfile?.display_name ?? "Profile"}'s Walls`
     : "My Walls";
 
-  // Simple guard/loading state
   if (!authReady) {
     return (
       <div className="dashboard" style={IS_SPATIAL ? spatialClear : undefined}>
@@ -288,42 +345,12 @@ export default function Dashboard({
         </div>
 
         <div className="right-actions">
-          <button
-            className="primary-btn"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              window.location.hash = "/auth";
-            }}
-            enable-xr="true"
-            data-z="40"
-          >
-            <svg
-              className="btn-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M16 17l5-5-5-5M21 12H9"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M13 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            Sign out
-          </button>
+          <AccountMenu />
         </div>
       </header>
 
       <main className="dash-main" style={IS_SPATIAL ? spatialClear : undefined}>
-        {/* Title Group with square chevron menu */}
+        {/* Title Group with dialog-based profile picker */}
         <div className="title-row">
           <div className="title-group">
             {selectedProfile?.avatar_url && (
@@ -349,13 +376,18 @@ export default function Dashboard({
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label="Choose profile"
-                onClick={() => setMenuOpen((v) => !v)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  positionMenu();
+                  setMenuOpen((v) => !v);
+                }}
               >
                 <svg
                   viewBox="0 0 24 24"
-                  preserveAspectRatio="xMidYMid meet"
                   width="18"
                   height="18"
+                  aria-hidden="true"
+                  focusable="false"
                 >
                   <path
                     d="M6 9l6 6 6-6"
@@ -368,8 +400,17 @@ export default function Dashboard({
                 </svg>
               </button>
 
-              {menuOpen && (
-                <div className="title-menu" ref={menuRef} role="menu">
+              <dialog
+                ref={dialogRef}
+                className="title-menu title-menu--dialog"
+                style={{
+                  position: "fixed",
+                  top: menuPos.top,
+                  left: menuPos.left,
+                  minWidth: menuPos.width,
+                }}
+              >
+                <div role="menu" aria-label="Choose profile">
                   <button
                     className="title-menu-item"
                     role="menuitem"
@@ -408,12 +449,12 @@ export default function Dashboard({
                     ))
                   )}
                 </div>
-              )}
+              </dialog>
             </span>
           </div>
         </div>
 
-        {/* Grid of walls */}
+        {/* Walls grid */}
         <section className="card-grid" enable-xr-monitor="true">
           {walls.length === 0 ? (
             <div className="empty">No walls yet — create your first one.</div>
@@ -431,7 +472,6 @@ export default function Dashboard({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && onOpenWall(w)}
-                  style={IS_SPATIAL ? undefined : undefined}
                 >
                   <div className="thumb">
                     {cover ? (
@@ -459,7 +499,7 @@ export default function Dashboard({
         </section>
       </main>
 
-      {/* Create Wall */}
+      {/* Create modals */}
       <CreateWallModal
         open={openWall}
         onClose={() => setOpenWall(false)}
@@ -467,7 +507,6 @@ export default function Dashboard({
         profileId={selectedProfileId}
       />
 
-      {/* Create Profile */}
       <CreateProfileModal
         open={openProfile}
         onClose={() => setOpenProfile(false)}

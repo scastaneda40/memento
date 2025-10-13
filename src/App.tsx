@@ -11,12 +11,16 @@ import { XR_RUNTIME, IS_SPATIAL, XR_ENV_BUILD } from "./env";
 
 type Route = "landing" | "dashboard" | "wall" | "auth";
 
+// 🔧 TEMP switch — set to true to bypass auth
+const AUTH_BYPASS = false;
+
 const getRoute = (): Route => {
   const h = window.location.hash;
   if (h.startsWith("#/dashboard")) return "dashboard";
   if (h.startsWith("#/wall")) return "wall";
   if (h.startsWith("#/auth")) return "auth";
-  return "landing";
+  // Default to dashboard when bypassing auth
+  return AUTH_BYPASS ? "dashboard" : "landing";
 };
 
 export default function App() {
@@ -25,14 +29,12 @@ export default function App() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
     null
   );
-  const [isAuthed, setIsAuthed] = useState<boolean | null>(null); // null = booting
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(
+    AUTH_BYPASS ? true : null
+  );
 
-  // in App.tsx (or main.tsx)
   useEffect(() => {
-    // Apply or remove the CSS class so spatial styling kicks in
     document.documentElement.classList.toggle("is-spatial", IS_SPATIAL);
-
-    // Log current runtime and build for sanity checks
     console.log(
       "[XR] runtime:",
       XR_RUNTIME,
@@ -50,8 +52,20 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // Boot once, then react to auth changes
+  // 🔒 Auth boot + listener — skip entirely when bypassing
   useEffect(() => {
+    if (AUTH_BYPASS) {
+      // Ensure we land on dashboard
+      if (
+        !window.location.hash ||
+        window.location.hash === "#/" ||
+        window.location.hash === "#"
+      ) {
+        window.location.hash = "/dashboard";
+      }
+      return;
+    }
+
     (async () => {
       const { data } = await supabase.auth.getSession();
       setIsAuthed(!!data.session);
@@ -64,13 +78,10 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       (_evt: AuthChangeEvent, session: Session | null) => {
-        // Optional log:
-        // console.log("[auth] event:", evt, "user:", session?.user?.id ?? null);
         setIsAuthed(!!session);
         window.location.hash = session ? "/dashboard" : "/auth";
       }
     );
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -82,19 +93,32 @@ export default function App() {
     window.location.hash = "/wall";
   };
 
-  // Wait while checking session
-  if (isAuthed === null) return null;
+  // While checking session (non-bypass only)
+  if (!AUTH_BYPASS && isAuthed === null) return null;
 
-  // Unauthed views
+  // 🚪 When bypassing, always render private routes
+  if (AUTH_BYPASS) {
+    if (route === "wall" && activeWall) {
+      return <WallView wall={activeWall} onBack={goToDashboard} />;
+    }
+    // Default: Dashboard
+    return (
+      <Dashboard
+        goHome={goHome}
+        onOpenWall={openWall}
+        selectedProfileId={selectedProfileId}
+        onSelectProfile={setSelectedProfileId}
+      />
+    );
+  }
+
+  // 🔐 Normal auth-gated rendering (unchanged)
   if (!isAuthed) {
-    // Protect private routes
     if (route === "dashboard" || route === "wall") {
       window.location.hash = "/auth";
       return null;
     }
-    if (route === "auth") {
-      return <AuthView />;
-    }
+    if (route === "auth") return <AuthView />;
     return (
       <Landing
         onPrimary={() => (window.location.hash = "/auth")}
@@ -103,7 +127,6 @@ export default function App() {
     );
   }
 
-  // Authed routes
   if (route === "dashboard") {
     return (
       <Dashboard
@@ -119,13 +142,11 @@ export default function App() {
     return <WallView wall={activeWall} onBack={goToDashboard} />;
   }
 
-  // If authenticated and on /auth, bounce to dashboard
   if (route === "auth") {
     goToDashboard();
     return null;
   }
 
-  // Default
   goToDashboard();
   return null;
 }
