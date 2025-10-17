@@ -1,5 +1,5 @@
 // src/spatial/WallSpatial.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 // @ts-expect-error – adjust import path to your SDK
 import * as WS from "webspatial-sdk"; // or wherever your sdk exports are
 import { supabase } from "../lib/supabase";
@@ -92,7 +92,6 @@ export default function WallSpatial({ wallId, children, dev }: Props) {
     } | null = null;
 
     // We’ll use SpatialMonitor to get frame/select
-    let stop = () => {};
 
     const Monitor = () => (
       <WS.SpatialMonitor
@@ -137,10 +136,7 @@ export default function WallSpatial({ wallId, children, dev }: Props) {
       try {
         hit?.stop?.();
       } catch {}
-      stop = () => {};
     }
-
-    stop = cleanup;
   }
 
   // Kick placement automatically if there’s no pose
