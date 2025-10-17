@@ -4,7 +4,6 @@ import App from "./App";
 import "./index.css";
 import { XR_RUNTIME, IS_SPATIAL, XR_ENV_BUILD } from "./env";
 import { initSpatialIfAvailable } from "./spatial/boot"; // 👈 add this
-import "./types/jsx-ambient";
 
 document.documentElement.classList.toggle("is-spatial", IS_SPATIAL);
 
