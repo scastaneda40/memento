@@ -25,5 +25,5 @@
     /* ✅ Add this */
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "supabase"]
+  "include": ["src", "supabase", "src/types"]
 }
