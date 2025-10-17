@@ -293,10 +293,10 @@ export default function Dashboard({
     <div className="dashboard" style={IS_SPATIAL ? spatialClear : undefined}>
       <header
         className="dash-header"
-        enable-xr-monitor="true"
+        enable-xr-monitor
         style={IS_SPATIAL ? spatialClear : undefined}
       >
-        <div className="brand" onClick={goHome} enable-xr="true" data-z="40">
+        <div className="brand" onClick={goHome} enable-xr data-z="40">
           Memento°
         </div>
 
@@ -304,7 +304,7 @@ export default function Dashboard({
           <button
             className="primary-btn"
             onClick={() => setOpenProfile(true)}
-            enable-xr="true"
+            enable-xr
             data-z="40"
           >
             <svg
@@ -324,7 +324,7 @@ export default function Dashboard({
           <button
             className="primary-btn"
             onClick={() => setOpenWall(true)}
-            enable-xr="true"
+            enable-xr
             data-z="40"
           >
             <svg
@@ -455,7 +455,7 @@ export default function Dashboard({
         </div>
 
         {/* Walls grid */}
-        <section className="card-grid" enable-xr-monitor="true">
+        <section className="card-grid" enable-xr-monitor>
           {walls.length === 0 ? (
             <div className="empty">No walls yet — create your first one.</div>
           ) : (
@@ -466,7 +466,7 @@ export default function Dashboard({
                 <article
                   key={w.id}
                   className="card card--click"
-                  enable-xr="true"
+                  enable-xr
                   data-z="30"
                   onClick={() => onOpenWall(w)}
                   role="button"

@@ -248,3 +248,108 @@ html.is-spatial .wall-header {
 .wall-main {
   overflow: visible;
 }
+
+/* Toast that only appears when placement is needed */
+.placement-toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  backdrop-filter: blur(8px) saturate(150%);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* DEV button to clear pose */
+.reset-placement {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 10000; /* 🚀 above FAB & panel chrome */
+  pointer-events: auto; /* make sure it's clickable */
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(220, 66, 66, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Spatial placement mode UX ---------- */
+
+/* When WallView sets the root to .placing, dim UI and stop it from catching taps */
+.is-spatial .wall-view.placing .wall-header,
+.is-spatial .wall-view.placing .fab {
+  opacity: 0.35;
+  pointer-events: none; /* critical: don't steal the first select/tap */
+}
+
+/* Hide main content until placed (no flash of cards behind the reticle) */
+.is-spatial .wall-view.placing .wall-main {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+/* When placed, fade main content back in */
+.is-spatial .wall-view:not(.placing) .wall-main {
+  opacity: 1;
+}
+
+/* Ensure the decorative glass sheet never intercepts events */
+.wall-view::before,
+.wall-view::after {
+  pointer-events: none;
+}
+
+/* Toast sits above everything but doesn't block taps */
+.placement-toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  backdrop-filter: blur(8px) saturate(150%);
+  z-index: 2147483647; /* max it out */
+  pointer-events: none; /* don't eat the select tap */
+}
+
+/* DEV-only reset button: above normal UI, but still clickable */
+.reset-placement {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2147483000;
+  pointer-events: auto;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(220, 66, 66, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Optional: give the root a subtle cue while placing */
+.is-spatial .wall-view.placing {
+  outline: 2px dashed rgba(255, 255, 255, 0.25);
+  outline-offset: 6px;
+}

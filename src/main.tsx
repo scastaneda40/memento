@@ -2,14 +2,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-
-// ✅ import the actual exports from env.ts
 import { XR_RUNTIME, IS_SPATIAL, XR_ENV_BUILD } from "./env";
+import { initSpatialIfAvailable } from "./spatial/boot"; // 👈 add this
 
-// Apply spatial class as early as possible (before render)
 document.documentElement.classList.toggle("is-spatial", IS_SPATIAL);
 
-// Sanity logs
 console.log(
   "[XR] runtime:",
   XR_RUNTIME,
@@ -19,8 +16,20 @@ console.log(
   IS_SPATIAL
 );
 
-const container = document.getElementById("root");
-if (!container) {
-  throw new Error("#root not found");
-}
-createRoot(container).render(<App />);
+(async () => {
+  if (IS_SPATIAL) {
+    try {
+      const s = await initSpatialIfAvailable(); // 👈 start WebSpatial
+      console.log(
+        "[XR] spatial session:",
+        !!s ? "initialized" : "not available"
+      );
+    } catch (e) {
+      console.warn("[XR] initSpatialIfAvailable failed; continuing in 2D", e);
+    }
+  }
+
+  const container = document.getElementById("root");
+  if (!container) throw new Error("#root not found");
+  createRoot(container).render(<App />);
+})();
