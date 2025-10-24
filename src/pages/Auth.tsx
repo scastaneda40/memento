@@ -1,7 +1,7 @@
 // src/pages/Auth.tsx
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { IS_SPATIAL } from "../env"; // <-- add this
+import { IS_SPATIAL } from "../env";
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -13,8 +13,6 @@ export default function Auth() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  // 👉 critical: send users back to the site root (no hash)
-  // Works in dev & prod; typed out of the box
   const REDIRECT_TO = new URL(
     "auth/callback.html",
     window.location.origin + import.meta.env.BASE_URL
@@ -40,7 +38,7 @@ export default function Auth() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: REDIRECT_TO }, // <- origin
+      options: { emailRedirectTo: REDIRECT_TO },
     });
     setBusy(false);
     if (error) setErr(error.message);
@@ -52,33 +50,11 @@ export default function Auth() {
     setErr(null);
     setMsg(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: REDIRECT_TO, // <- origin
+      redirectTo: REDIRECT_TO,
     });
     setBusy(false);
     if (error) setErr(error.message);
     else setMsg("Password reset link sent. Check your email.");
-  };
-
-  // OAuth full-page redirect; Supabase will append ?code=... to REDIRECT_TO
-  const oauth = async (provider: "google" | "apple") => {
-    setBusy(true);
-    setErr(null);
-    console.log("[oauth] start", { provider, redirectTo: REDIRECT_TO });
-    const { error, data, url } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: REDIRECT_TO,
-        queryParams: { prompt: "select_account", access_type: "offline" },
-      },
-    });
-    // On success the browser will navigate away, so we only handle errors:
-    if (error) {
-      console.error("[oauth] immediate error", error);
-      setBusy(false);
-      setErr(error.message);
-    } else {
-      console.log("[oauth] initiated (expect navigation)", { data, url });
-    }
   };
 
   return (
@@ -156,35 +132,12 @@ export default function Auth() {
             </button>
           )}
         </div>
-
-        <div style={{ height: 14 }} />
-        <div style={{ textAlign: "center", opacity: 0.6, fontSize: 12 }}>
-          or
-        </div>
-        <div style={{ height: 10 }} />
-
-        <div style={row}>
-          <button
-            style={oauthBtn}
-            disabled={busy}
-            onClick={() => oauth("google")}
-          >
-            Continue with Google
-          </button>
-          <button
-            style={oauthBtn}
-            disabled={busy}
-            onClick={() => oauth("apple")}
-          >
-            Continue with Apple
-          </button>
-        </div>
       </div>
     </div>
   );
 }
 
-/* tiny inline styles */
+/* styles */
 const wrap: React.CSSProperties = {
   minHeight: "100vh",
   display: "grid",
@@ -198,30 +151,42 @@ const wrap: React.CSSProperties = {
 const card: React.CSSProperties = {
   width: "min(440px, 92vw)",
   background: IS_SPATIAL ? "transparent" : "rgba(255,255,255,0.9)",
-  // blur looks like a gray panel in spatial; disable it
   backdropFilter: IS_SPATIAL ? undefined : "blur(16px) saturate(140%)",
   border: IS_SPATIAL
-    ? "1px solid rgba(255,255,255,0.18)"
+    ? "1px solid rgba(255,255,255,0.25)"
     : "1px solid rgba(0,0,0,0.08)",
   borderRadius: 16,
-  boxShadow: IS_SPATIAL ? "none" : "0 12px 36px rgba(0,0,0,0.16)",
-  padding: 20,
+  boxShadow: IS_SPATIAL
+    ? "0 0 24px rgba(255,255,255,0.15)"
+    : "0 12px 36px rgba(0,0,0,0.16)",
+  padding: 24,
+  color: IS_SPATIAL ? "rgba(255,255,255,0.92)" : "#111827", // ✅ brighter text for transparent bg
 };
 
 const label: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   marginBottom: 6,
+  color: IS_SPATIAL ? "rgba(255,255,255,0.85)" : "#111827",
 };
+
 const input: React.CSSProperties = {
   width: "100%",
   padding: "10px 12px",
   borderRadius: 10,
-  border: "1px solid rgba(0,0,0,0.12)",
-  background: "white",
+  border: IS_SPATIAL
+    ? "1px solid rgba(255,255,255,0.4)"
+    : "1px solid rgba(0,0,0,0.12)",
+  background: IS_SPATIAL ? "rgba(255,255,255,0.08)" : "white",
+  color: IS_SPATIAL ? "rgba(255,255,255,0.95)" : "#111827",
   marginBottom: 12,
   fontSize: 14,
+  outline: "none",
+  boxShadow: IS_SPATIAL
+    ? "inset 0 0 8px rgba(255,255,255,0.08)"
+    : "inset 0 1px 2px rgba(0,0,0,0.08)",
 };
+
 const primaryBtn: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
@@ -232,39 +197,36 @@ const primaryBtn: React.CSSProperties = {
   background: "#6d28d9",
   color: "white",
   boxShadow: "0 10px 24px rgba(109,40,217,0.25)",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
 };
-const oauthBtn: React.CSSProperties = {
-  flex: 1,
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid rgba(0,0,0,0.12)",
-  background: "white",
-  cursor: "pointer",
-};
+
 const linkBtn: React.CSSProperties = {
   background: "transparent",
   border: 0,
-  color: "#6d28d9",
+  color: IS_SPATIAL ? "rgba(255,255,255,0.85)" : "#6d28d9",
   cursor: "pointer",
   textDecoration: "underline",
   padding: 0,
 };
+
 const row: React.CSSProperties = {
   display: "flex",
   gap: 10,
   flexWrap: "wrap",
   justifyContent: "center",
 };
+
 const errorBox: React.CSSProperties = {
-  background: "#fee2e2",
-  color: "#991b1b",
+  background: IS_SPATIAL ? "rgba(255,0,0,0.1)" : "#fee2e2",
+  color: IS_SPATIAL ? "#ffaaaa" : "#991b1b",
   padding: "8px 10px",
   borderRadius: 8,
   marginBottom: 10,
 };
+
 const infoBox: React.CSSProperties = {
-  background: "#ecfeff",
-  color: "#155e75",
+  background: IS_SPATIAL ? "rgba(0,255,255,0.08)" : "#ecfeff",
+  color: IS_SPATIAL ? "#b3ffff" : "#155e75",
   padding: "8px 10px",
   borderRadius: 8,
   marginBottom: 10,

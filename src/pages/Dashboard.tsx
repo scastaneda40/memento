@@ -304,7 +304,7 @@ export default function Dashboard({
           <button
             className="primary-btn"
             onClick={() => setOpenProfile(true)}
-            enable-xr="true"
+            enable-xr
             data-z="40"
           >
             <svg
