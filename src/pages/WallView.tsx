@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SpaceScene from "../spatial/SpaceScene";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import type { Wall, Memento } from "../types";
@@ -49,6 +50,7 @@ export default function WallView({
   // ---------- auth ----------
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [showOrbView, setShowOrbView] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -457,14 +459,69 @@ export default function WallView({
   // ---------- render ----------
   return (
     <>
-      <div ref={rootRef} className={`wall-view ${wall.background}`}>
-        <header className="wall-header">
-          <button className="back-btn" onClick={onBack} aria-label="Back">
+      {showOrbView ? (
+        <SpaceScene mementos={mementos} />
+      ) : (
+        <div ref={rootRef} className={`wall-view ${wall.background}`}>
+          <header className="wall-header">
+            <button className="back-btn" onClick={onBack} aria-label="Back">
+              <svg
+                className="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <h1 className="wall-title">{wall.title}</h1>
+            <button
+              className="orb-view-btn"
+              onClick={() => setShowOrbView(!showOrbView)}
+            >
+              {showOrbView ? "Wall View" : "Orb View"}
+            </button>
+          </header>
+
+          <main className="wall-main">
+            {mementos.map((m) => (
+              <MementoCard
+                key={m.id}
+                m={m}
+                onChange={(next) =>
+                  setMementos((prev) =>
+                    prev.map((x) =>
+                      x.id === next.id
+                        ? { ...next, width: next.width ?? 260 }
+                        : x
+                    )
+                  )
+                }
+                onCommit={commitPosition}
+                onDelete={handleDeleteMemento}
+              />
+            ))}
+            {mementos.length === 0 && (
+              <div className="empty-state">Add your first memento</div>
+            )}
+          </main>
+
+          <button
+            className="fab"
+            onClick={() => setOpenMemento(true)}
+            aria-label="Add Memento"
+          >
             <svg
               className="icon"
               xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -472,63 +529,19 @@ export default function WallView({
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polyline points="15 18 9 12 15 6" />
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </button>
-          <h1 className="wall-title">{wall.title}</h1>
-        </header>
 
-        <main className="wall-main">
-          {mementos.map((m) => (
-            <MementoCard
-              key={m.id}
-              m={m}
-              onChange={(next) =>
-                setMementos((prev) =>
-                  prev.map((x) =>
-                    x.id === next.id ? { ...next, width: next.width ?? 260 } : x
-                  )
-                )
-              }
-              onCommit={commitPosition}
-              onDelete={handleDeleteMemento}
-            />
-          ))}
-          {mementos.length === 0 && (
-            <div className="empty-state">Add your first memento</div>
-          )}
-        </main>
-
-        <button
-          className="fab"
-          onClick={() => setOpenMemento(true)}
-          aria-label="Add Memento"
-        >
-          <svg
-            className="icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
-
-        <CreateMementoModal
-          open={openMemento}
-          onClose={() => setOpenMemento(false)}
-          wall={wall}
-          onSave={handleSaveDraft}
-        />
-      </div>
-
+          <CreateMementoModal
+            open={openMemento}
+            onClose={() => setOpenMemento(false)}
+            wall={wall}
+            onSave={handleSaveDraft}
+          />
+        </div>
+      )}
       <Hud />
     </>
   );

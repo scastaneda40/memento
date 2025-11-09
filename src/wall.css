@@ -175,6 +175,14 @@
   padding: 24px 28px 32px;
   overflow: visible;
   padding-top: 40px;
+  flex-grow: 1; /* Allow main content to grow */
+  display: flex; /* Enable flexbox for children */
+  flex-direction: column; /* Stack children vertically */
+}
+
+/* Ensure SpaceScene (Canvas) takes full available space */
+.wall-main > div:has(canvas) {
+  flex-grow: 1;
 }
 
 /* Empty state hint on the sheet */
